@@ -1,0 +1,100 @@
+    # Проверить установленную версию Go
+go version
+
+    # Создать новый проект (в папке проекта)
+go mod init ваш_проект
+
+
+
+
+
+    # Основные зависимости Установка
+Переменные окружения
+go get github.com/joho/godotenv
+Для чего: Загрузка конфигурации из .env-файла (API-ключи, пароли).
+
+Веб-фреймворк
+go get github.com/gin-gonic/gin 
+Для чего: Создание API (роутинг, обработка HTTP-запросов)
+
+Аутентификация
+go get github.com/golang-jwt/jwt/v5
+Для чего: Работа с JWT-токенами (авторизация пользователей)
+
+Уникальные идентификаторы
+go get github.com/google/uuid
+Для чего: Генерация UUID для сущностей (пользователи, заказы и т.д.)
+
+websocket
+go get github.com/gorilla/websocket
+Для чего: Реализация чатов или уведомлений в реальном времени.
+
+Работа с PostgreSQL
+go get github.com/jackc/pgx/v5
+Для чего: Подключение и запросы к PostgreSQL.
+
+Криптография
+go get golang.org/x/crypto
+Для чего: Хеширование паролей (bcrypt), шифрование данных.
+
+
+
+    3. Обслуживание проекта
+# Удаляет неиспользуемые зависимости из go.mod и добавляет недостающие
+go mod tidy 
+не нужно лишний раз вызывать очищает фаил go.mod
+
+# Очистить кэш сборки
+go clean -cache
+
+# Собрать проект
+go build ./...
+
+# Запустить сервер (если точка входа в cmd/main.go)
+go run cmd/main.go
+
+# Очистить терминал
+cls
+
+
+
+Бэкенд (в папке backend):
+установка
+    go mod init chitchat.dating/backend
+    go run main.go
+Установите необходимые зависимости (go get )
+    go get github.com/gorilla/mux 
+    go get github.com/joho/godotenv
+    go get github.com/jackc/pgx/v5
+    go get golang.org/x/net/context
+    go get github.com/gin-gonic/gin 
+    - PostgreSQL-драйвер
+        go get github.com/jackc/pgx/v5  
+        go get github.com/jackc/pgx/v5/pgxpool
+    - Установи golang-migrate 
+        go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+        * имеют формат name.up.sql для применения и name.down.sql для откат
+        применить с помощью команды migrate
+        - migrate -path ./migrations -database "postgres://postgres:toor@localhost:5432/chitchat?sslmode=disable" up
+Создай папку chit в удобном месте:
+mkdir chit
+cd chit
+Инициализируй Go-модуль:
+go mod init chit
+Это создаст файл go.mod, который будет управлять 
+
+Проверить зависимости
+    go mod tidy
+
+
+
+PostgreSQL установка
+вначале на пк (Система = далее = Дополнительные параметры системы = переменные среды = внизу создать 
+дополнитеную patch с ссылкой на C:\Program Files\PostgreSQL\17\bin)
+
+кодировка если нужна chcp 1251
+psql -U postgres -d chitchat
+Пароль пользователя postgres:
+psql (17.2)
+chitchat=# 
+выход   chitchat-# \q

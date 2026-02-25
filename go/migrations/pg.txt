@@ -1,0 +1,422 @@
+
+
+
+
+
+CREATE TABLE users_id (
+    id BIGSERIAL PRIMARY KEY,
+    user_uid VARCHAR(36) UNIQUE NOT NULL,
+    user_number VARCHAR(32),
+    user_email VARCHAR(255),
+    user_reg TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX idx_users_email ON users_id (LOWER(user_email));
+CREATE UNIQUE INDEX idx_users_number ON users_id (user_number);
+
+CREATE TABLE guid (
+    guid_id BIGSERIAL PRIMARY KEY,
+    user_uid VARCHAR(36) UNIQUE NOT NULL
+);
+CREATE UNIQUE INDEX idx_guid_useruid ON guid (user_uid);
+
+CREATE TABLE blocked (
+    blocked_id BIGSERIAL PRIMARY KEY,
+    guid_id BIGINT NOT NULL REFERENCES guid(guid_id) ON DELETE CASCADE,
+    blocked_status BOOLEAN NOT NULL DEFAULT false,
+    blocked_type VARCHAR(64),
+    blocked_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_blocked_guid_date ON blocked (guid_id, blocked_date DESC);
+
+
+
+-- 011_create_users_id_guid_blocked.sql
+
+CREATE TABLE IF NOT EXISTS users_id (
+    id BIGSERIAL PRIMARY KEY,
+    user_uid VARCHAR(36) UNIQUE NOT NULL,
+    user_number VARCHAR(32) UNIQUE,
+    user_email VARCHAR(255) UNIQUE,
+    user_reg TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_users_id_email ON users_id (user_email);
+CREATE INDEX IF NOT EXISTS idx_users_id_number ON users_id (user_number);
+
+CREATE TABLE IF NOT EXISTS guid (
+    guid_id BIGSERIAL PRIMARY KEY,
+    user_uid VARCHAR(36) UNIQUE NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_guid_useruid ON guid (user_uid);
+
+CREATE TABLE IF NOT EXISTS blocked (
+    blocked_id BIGSERIAL PRIMARY KEY,
+    guid_id BIGINT NOT NULL REFERENCES guid(guid_id) ON DELETE CASCADE,
+    blocked_status BOOLEAN NOT NULL DEFAULT false,
+    blocked_type VARCHAR(64),
+    blocked_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_blocked_guid_date ON blocked (guid_id, blocked_date DESC);
+
+
+
+CREATE TABLE passwords (
+  password_id BIGSERIAL PRIMARY KEY,
+  guid_id BIGINT NOT NULL REFERENCES guid(guid_id) ON DELETE CASCADE,
+  password_hash VARCHAR(64),         -- хеш пароля (например, hex-строка SHA256/argon2id/bcrypt)
+  password_reset VARCHAR(64),        -- хеш/токен для сброса пароля (опционально)
+  password_attempts INT DEFAULT 0,   -- количество попыток ввода пароля (для блокировки)
+  password_verification INT DEFAULT 0, -- количество успешных верификаций (можно для статистики)
+  password_date TIMESTAMPTZ NOT NULL DEFAULT now(), -- дата создания пароля
+  password_last_date TIMESTAMPTZ,    -- дата последнего изменения пароля
+  password_active BOOLEAN NOT NULL DEFAULT false    -- false при создании пользователя, true после успешной регистрации пароля
+);
+CREATE UNIQUE INDEX idx_passwords_guid ON passwords (guid_id);
+-- Add verification token columns to passwords table
+-- This ensures only users who control their email/phone can register/reset passwords
+
+ALTER TABLE passwords 
+ADD COLUMN password_verification_token VARCHAR(255),
+ADD COLUMN password_verification_expires TIMESTAMP;
+
+-- Create index for faster token lookups
+CREATE INDEX idx_passwords_verification_token ON passwords(password_verification_token) 
+WHERE password_verification_token IS NOT NULL;
+
+
+
+
+-- 013_convert_timestamps_to_timestamptz.sql
+-- Convert some TIMESTAMP (without time zone) columns to TIMESTAMPTZ
+-- We assume existing values were recorded in Europe/Moscow (GMT+3) local time and
+-- want to preserve the same wall-clock time but store it with +03 offset (timestamptz).
+-- IMPORTANT: make a DB backup before running this migration.
+
+BEGIN;
+
+-- users_id.user_reg: convert to timestamptz, interpreting existing values as Europe/Moscow local time
+ALTER TABLE users_id
+  ALTER COLUMN user_reg TYPE TIMESTAMPTZ
+  USING user_reg AT TIME ZONE 'Europe/Moscow';
+ALTER TABLE users_id
+  ALTER COLUMN user_reg SET DEFAULT now();
+
+-- blocked.blocked_date
+ALTER TABLE blocked
+  ALTER COLUMN blocked_date TYPE TIMESTAMPTZ
+  USING blocked_date AT TIME ZONE 'Europe/Moscow';
+ALTER TABLE blocked
+  ALTER COLUMN blocked_date SET DEFAULT now();
+
+-- password_verification_expires (added previously as TIMESTAMP) -> convert to timestamptz
+ALTER TABLE passwords
+  ALTER COLUMN password_verification_expires TYPE TIMESTAMPTZ
+  USING password_verification_expires AT TIME ZONE 'Europe/Moscow';
+
+COMMIT;
+
+-- After running migration, you can verify with:
+-- SELECT id, user_uid, user_reg FROM users_id ORDER BY id DESC LIMIT 5;
+-- SELECT guid_id, password_date, password_last_date, password_verification_expires FROM passwords ORDER BY password_id DESC LIMIT 5;
+
+
+CREATE TABLE protection (
+    protection_id BIGSERIAL PRIMARY KEY,
+    guid_id BIGINT NOT NULL REFERENCES guid(guid_id) ON DELETE CASCADE,
+    protection_status BOOLEAN NOT NULL DEFAULT false,
+    protection_date TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(guid_id)  -- один protection запись на пользователя
+);
+CREATE INDEX idx_protection_guid ON protection(guid_id);
+
+
+-- 015_create_sessions.sql
+-- Create sessions table to store session and refresh tokens
+
+CREATE TABLE sessions (
+    session_id BIGSERIAL PRIMARY KEY,
+    user_uid TEXT NOT NULL,
+    guid_id BIGINT NULL REFERENCES guid(guid_id) ON DELETE CASCADE,
+    session_token TEXT NOT NULL UNIQUE,
+    session_refresh TEXT NOT NULL UNIQUE,
+    session_user_agent TEXT,
+    ip_address TEXT,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    session_expires_at TIMESTAMPTZ,
+    session_refresh_expires_at TIMESTAMPTZ
+);
+
+CREATE INDEX idx_sessions_user_uid ON sessions(user_uid);
+CREATE INDEX idx_sessions_token ON sessions(session_token);
+CREATE INDEX idx_sessions_refresh ON sessions(session_refresh);
+
+
+
+CREATE TABLE secrets (
+    secret_id BIGSERIAL PRIMARY KEY,
+    guid_id BIGINT NOT NULL REFERENCES guid(guid_id) ON DELETE CASCADE,
+    secret_hash TEXT NOT NULL,
+    secret_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX idx_secrets_guid_id ON secrets(guid_id);
+CREATE INDEX idx_secrets_active ON secrets(secret_active);
+
+ALTER TABLE passwords ALTER COLUMN password_hash TYPE VARCHAR(128);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CREATE TABLE users (
+    user_id BIGSERIAL PRIMARY KEY,
+    uid VARCHAR(20) NOT NULL UNIQUE,
+    user_number BIGINT,
+    user_email VARCHAR(30),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE user_password (
+    password_id BIGSERIAL PRIMARY KEY,
+    user_uid VARCHAR(20) NOT NULL UNIQUE,
+    password VARCHAR(64) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_uid) REFERENCES users(uid)
+);
+
+CREATE TABLE user_secret (
+    secret_id BIGSERIAL PRIMARY KEY,
+    user_uid VARCHAR(20) NOT NULL,
+    secret VARCHAR NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_uid) REFERENCES users(uid)
+);
+
+CREATE TABLE IF NOT EXISTS password_recovery (
+    uid VARCHAR(20) PRIMARY KEY,
+    token VARCHAR(20) NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (uid) REFERENCES users(uid)
+);
+
+CREATE TABLE IF NOT EXISTS secret_recovery (
+    uid VARCHAR(20) PRIMARY KEY,
+    token VARCHAR(20) NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (uid) REFERENCES users(uid)
+);
+
+
+CREATE TABLE user_status_ws (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_uid VARCHAR(36) NOT NULL,
+    connection_id VARCHAR(36) UNIQUE NOT NULL,
+    status ENUM('online', 'offline') DEFAULT 'offline',
+    FOREIGN KEY (user_uid) REFERENCES users(uid)
+);
+
+
+CREATE TABLE user_refresh_token (
+    id BIGSERIAL PRIMARY KEY,
+    user_uid VARCHAR(36) NOT NULL,
+    token TEXT NOT NULL,
+    device_info VARCHAR(255),
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_uid) REFERENCES users(uid)
+);
+
+
+CREATE TABLE user_session (
+    id BIGSERIAL PRIMARY KEY,
+    user_uid VARCHAR(36) NOT NULL,
+    session_id VARCHAR(100) NOT NULL,
+    ip_address VARCHAR(45),
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_uid) REFERENCES users(uid)
+);
+
+
+
+
+
+
+migrations/001_create_users.sql
+sql
+
+Свернуть
+
+Перенос
+
+Копировать
+-- migrations/001_create_users.sql
+-- Создание таблицы пользователей
+CREATE TABLE users_id (
+    id BIGSERIAL PRIMARY KEY,
+    user_uid VARCHAR(36) UNIQUE NOT NULL,
+    user_number VARCHAR(15),
+    user_email VARCHAR(255),
+    user_reg TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+migrations/002_create_user_password.sql
+sql
+
+Свернуть
+
+Перенос
+
+Копировать
+-- migrations/002_create_user_password.sql
+-- Создание таблицы паролей пользователей
+CREATE TABLE user_password (
+    id BIGSERIAL PRIMARY KEY,
+    user_uid VARCHAR(36) UNIQUE NOT NULL,
+    password VARCHAR(60) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_uid) REFERENCES users(uid)
+);
+migrations/003_create_user_secret.sql
+sql
+
+Свернуть
+
+Перенос
+
+Копировать
+-- migrations/003_create_user_secret.sql
+-- Создание таблицы секретных слов
+CREATE TABLE user_secret (
+    id BIGSERIAL PRIMARY KEY,
+    user_uid VARCHAR(36) UNIQUE NOT NULL,
+    secret VARCHAR(60) NOT NULL,
+    refresh_mode VARCHAR(20) NOT NULL DEFAULT 'daily',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_uid) REFERENCES users(uid)
+);
+migrations/004_create_password_recovery.sql
+sql
+
+Свернуть
+
+Перенос
+
+Копировать
+-- migrations/004_create_password_recovery.sql
+-- Создание таблицы для восстановления пароля
+CREATE TABLE password_recovery (
+    id BIGSERIAL PRIMARY KEY,
+    user_uid VARCHAR(36) NOT NULL,
+    token VARCHAR(36) NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_uid) REFERENCES users(uid)
+);
+migrations/005_create_secret_recovery.sql
+sql
+
+Свернуть
+
+Перенос
+
+Копировать
+-- migrations/005_create_secret_recovery.sql
+-- Создание таблицы для восстановления секретного слова
+CREATE TABLE secret_recovery (
+    id BIGSERIAL PRIMARY KEY,
+    user_uid VARCHAR(36) NOT NULL,
+    token VARCHAR(36) NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_uid) REFERENCES users(uid)
+);
+
+
+CREATE TABLE user_status_ws (
+    id BIGSERIAL PRIMARY KEY,                -- Уникальный автоинкрементный идентификатор
+    user_uid VARCHAR(36) UNIQUE NOT NULL,    -- Уникальный идентификатор пользователя, одна запись на пользователя
+    connection_id VARCHAR(36) UNIQUE NOT NULL, -- Уникальный идентификатор соединения
+    status VARCHAR(10) CHECK (status IN ('online', 'offline', 'idle')) DEFAULT 'offline', -- Статус с тремя значениями
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Время создания записи
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Время последнего обновления
+    last_ping_at TIMESTAMP DEFAULT NULL,     -- Время последнего пинга
+    FOREIGN KEY (user_uid) REFERENCES users(uid) -- Внешний ключ на таблицу users
+);
+
+-- Функция для автоматического обновления updated_at
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Триггер для вызова функции перед обновлением
+CREATE TRIGGER update_user_status_ws_updated_at
+    BEFORE UPDATE ON user_status_ws
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();

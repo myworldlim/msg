@@ -1,0 +1,940 @@
+{
+  "name": "chitchat",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "dev:https": "concurrently \"next dev\" \"local-ssl-proxy --source 3001 --target 3000 --cert localhost.pem --key localhost-key.pem\"",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.90.2",
+    "@use-gesture/react": "^10.3.1",
+    "framer-motion": "^12.23.22",
+    "next": "15.5.4",
+    "next-pwa": "5.6.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "zustand": "5.0.8"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.28.4",
+    "@types/minimatch": "6.0.0",
+    "@types/node": "20",
+    "@types/react": "19",
+    "@types/react-dom": "19",
+    "concurrently": "^9.2.1",
+    "local-ssl-proxy": "^2.0.5",
+    "typescript": "^5"
+  }
+}
+
+const withPWA = require('next-pwa')({
+  dest: 'public', // Директория для сервис-воркера и манифеста
+  register: true, // Авторегистрация сервис-воркера
+  skipWaiting: true, // Активация нового SW сразу
+  disableDevLogs: true, // Убираем лишние логи Workbox в dev
+  // Добавьте эти настройки:
+  buildExcludes: [/middleware-manifest\.json$/],
+  mode: process.env.NODE_ENV === 'development' ? 'development' : 'production',
+  // Отключаем некоторые функции в разработке
+  disable: process.env.NODE_ENV === 'development',
+});
+
+module.exports = withPWA({
+  reactStrictMode: true, // Для строгого режима React
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+});
+
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+/// <reference path="./.next/types/routes.d.ts" />
+
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
+
+
+по структуре
+/frontend
+├── app
+│   ├── (auth)
+│   │   ├── layout.tsx          # Общий лейаут для всех страниц аутентификации
+│   │   ├── page.tsx            # Главная страница: выбор метода (email/phone)
+│   │   ├── verify/             # Универсальная страница верификации
+│   │   │   ├── page.tsx        # Ввод кода (email/SMS)
+│   │   │   └── success.tsx     # Успешная верификация
+│   │   ├── password/
+│   │   │   ├── page.tsx        # Ввод пароля (если есть аккаунт)
+│   │   │   └── set.tsx         # Установка пароля (если нового пользователя)
+│   │   ├── secret/
+│   │   │   ├── page.tsx        # Ввод кодового слова
+│   │   │   └── set.tsx         # Установка кодового слова
+│   │   └── security-policy/
+│   │       └── page.tsx        # Политика безопасности
+│   │
+│   ├── (protected)
+│   │   ├── layout.tsx          # Главный лейаут с WebSocketProvider, меню
+│   │   ├── loading.tsx         # Глобальный loading для защищённых страниц
+│   │   ├──
+│   │   ├── messenger/          # Основной мессенджер
+│   │   │   ├── layout.tsx      # Лейаут мессенджера (чаты слева, сообщения справа)
+│   │   │   ├── page.tsx        # Список чатов (по умолчанию)
+│   │   │   ├── [chatId]/       # Динамический чат
+│   │   │   │   └── page.tsx
+│   │   │   └── components/     # ChatList, MessageInput, etc.
+│   │   │
+│   │   ├── user/               # Профиль и настройки
+│   │   │   ├── layout.tsx
+│   │   │   ├── page.tsx        # Обзор профиля
+│   │   │   ├── settings/
+│   │   │   │   └── page.tsx    # Настройки аккаунта
+│   │   │   ├── security/       # Безопасность (2FA, сессии)
+│   │   │   │   └── page.tsx
+│   │   │   └── components/     # ProfileCard, etc.
+│   │   │
+│   │   ├── dating/             # 18+ раздел
+│   │   │   ├── layout.tsx
+│   │   │   ├── page.tsx        # Главная (свайпы)
+│   │   │   ├── matches/        # Совпадения
+│   │   │   └── profile/        # Профиль другого пользователя
+│   │   │
+│   │   ├── invite/
+│   │   │   ├── [inviteId]/
+│   │   │   │   └── page.tsx    # Принятие приглашения
+│   │   │   └── sent/           # Отправленные приглашения
+│   │   │
+│   │   └── api/                # API-роуты ТОЛЬКО для защищённых данных
+│   │       ├── messenger/
+│   │       ├── user/
+│   │       └── dating/
+│   │
+│   ├── api/                    # Публичные API-роуты
+│   │   ├── auth/               # Регистрация, вход, верификация
+│   │   ├── device/             # Получение IP, device info
+│   │   └── public/             # Публичные данные (например, приглашения)
+│   │
+│   ├── lib/                    # Общие утилиты
+│   │   ├── store/              # Zustand stores (auth, device, chat)
+│   │   ├── hooks/              # Кастомные хуки (useAuth, useDevice)
+│   │   └── providers/          # AuthProvider, WebSocketProvider
+│   │
+│   ├── globals.css
+│   ├── layout.tsx              # Корневой layout (HTML, body)
+│   └── page.tsx                # Лендинг для неавторизованных
+│
+├── public/                     # Статические файлы (иконки PWA, логотипы)
+└── .env.local
+
+
+
+
+/frontend
+├── app/
+│   ├── (auth)/
+│   │   ├── layout.tsx                 # Общий layout аутентификации
+│   │   ├── page.tsx                   # Главная: ввод email/телефона
+│   │   ├── verify/
+│   │   │   └── page.tsx               # Универсальная верификация кода
+│   │   ├── password/
+│   │   │   ├── page.tsx               # Ввод пароля (существующий пользователь)
+│   │   │   └── set/
+│   │   │       └── page.tsx           # Установка пароля (новый пользователь)
+│   │   ├── secret/
+│   │   │   ├── page.tsx               # Ввод кодового слова
+│   │   │   └── set/
+│   │   │       └── page.tsx           # Установка кодового слова
+│   │   └── security-policy/
+│   │       └── page.tsx               # Политика безопасности
+│   │
+│   ├── (protected)/
+│   │   ├── layout.tsx                 # Главный layout с WebSocketProvider
+│   │   ├── loading.tsx                # Загрузка защищенных страниц
+│   │   ├── @menu/
+│   │   │   └── default.tsx            # Боковое меню (интерцептинг роут)
+│   │   │
+│   │   ├── messenger/
+│   │   │   ├── layout.tsx             # Layout мессенджера
+│   │   │   ├── page.tsx               # Список чатов
+│   │   │   ├── [chatId]/
+│   │   │   │   └── page.tsx           # Конкретный чат
+│   │   │   ├── groups/
+│   │   │   │   └── page.tsx           # Групповые чаты
+│   │   │   ├── contacts/
+│   │   │   │   └── page.tsx           # Контакты
+│   │   │   ├── calls/
+│   │   │   │   └── page.tsx           # Звонки
+│   │   │   └── components/            # Компоненты мессенджера
+│   │   │       ├── ChatList/
+│   │   │       ├── MessageInput/
+│   │   │       └── MessageBubble/
+│   │   │
+│   │   ├── user/
+│   │   │   ├── layout.tsx
+│   │   │   ├── page.tsx               # Профиль пользователя
+│   │   │   ├── account/
+│   │   │   │   └── page.tsx           # Управление аккаунтом
+│   │   │   ├── settings/
+│   │   │   │   └── page.tsx           # Настройки
+│   │   │   ├── notifications/
+│   │   │   │   └── page.tsx           # Уведомления
+│   │   │   └── components/            # Компоненты профиля
+│   │   │
+│   │   ├── dating/
+│   │   │   ├── layout.tsx
+│   │   │   ├── page.tsx               # Главная знакомств
+│   │   │   ├── matches/
+│   │   │   │   └── page.tsx           # Совпадения
+│   │   │   ├── search/
+│   │   │   │   └── page.tsx           # Поиск
+│   │   │   └── components/            # Компоненты знакомств
+│   │   │
+│   │   ├── invite/
+│   │   │   ├── layout.tsx
+│   │   │   ├── page.tsx               # Приглашения
+│   │   │   └── [inviteId]/
+│   │   │       └── page.tsx           # Конкретное приглашение
+│   │   │
+│   │   └── api/                       # ЗАЩИЩЕННЫЕ API endpoints
+│   │       ├── messenger/
+│   │       │   └── route.ts
+│   │       ├── user/
+│   │       │   └── route.ts
+│   │       ├── dating/
+│   │       │   └── route.ts
+│   │       └── invite/
+│   │           └── route.ts
+│   │
+│   ├── api/                           # ПУБЛИЧНЫЕ API endpoints
+│   │   ├── auth/
+│   │   │   ├── route.ts               # Авторизация
+│   │   │   └── verify/
+│   │   │       └── route.ts           # Верификация
+│   │   ├── device/
+│   │   │   └── ip/
+│   │   │       └── route.ts           # Получение IP
+│   │   └── public/
+│   │       └── route.ts               # Публичные данные
+│   │
+│   ├── lib/
+│   │   ├── store/                     # Zustand stores
+│   │   │   ├── index.ts
+│   │   │   ├── authStore.ts
+│   │   │   ├── deviceStore.ts
+│   │   │   ├── chatStore.ts
+│   │   │   └── uiStore.ts
+│   │   ├── hooks/                     # Кастомные хуки
+│   │   │   ├── useAuth.ts
+│   │   │   ├── useDevice.ts
+│   │   │   ├── useWebSocket.ts
+│   │   │   └── useChat.ts
+│   │   ├── providers/                 # Провайдеры контекста
+│   │   │   ├── AuthProvider.tsx
+│   │   │   ├── WebSocketProvider.tsx
+│   │   │   └── AppProviders.tsx
+│   │   ├── utils/                     # Утилиты
+│   │   │   ├── device.ts
+│   │   │   ├── auth.ts
+│   │   │   └── api.ts
+│   │   └── types/                     # TypeScript типы
+│   │       ├── auth.ts
+│   │       ├── chat.ts
+│   │       └── device.ts
+│   │
+│   ├── components/                    # ОБЩИЕ компоненты
+│   │   ├── ui/                        # Базовые UI компоненты
+│   │   │   ├── Button/
+│   │   │   ├── Input/
+│   │   │   ├── Modal/
+│   │   │   └── Loader/
+│   │   ├── layout/                    # Компоненты layout
+│   │   │   ├── Header/
+│   │   │   ├── Sidebar/
+│   │   │   └── Footer/
+│   │   └── shared/                    # Переиспользуемые компоненты
+│   │       ├── AuthForm/
+│   │       └── SecurityPolicy/
+│   │
+│   ├── styles/                        # Стили
+│   │   ├── globals.css
+│   │   ├── reset.css
+│   │   └── variables.css
+│   │
+│   ├── layout.tsx                     # Корневой layout
+│   ├── page.tsx                       # Главная страница
+│   ├── loading.tsx                    # Глобальная загрузка
+│   └── middleware.ts                  # Middleware для защиты
+│
+├── public/                            # Статические файлы
+│   ├── manifest.json
+│   ├── sw.js
+│   └── icons/
+│
+├── types/                             # Глобальные типы
+├── .env.local
+└── next.config.js
+
+/frontend
+├── app/
+│   ├── (auth)/                   # Аутентификация
+│   ├── (protected)/              # Защищенные страницы  
+│   ├── api/                      # API routes
+│   │   └── device/
+│   │       └── ip/
+│   │           └── route.ts      # Получение IP
+│   ├── lib/
+│   │   └── store/
+│   │       └── deviceStore.ts    # Zustand store
+│   └── layout.tsx                # Корневой layout
+│
+└── public/
+
+{
+  "name": "ChitChat PWA",
+  "short_name": "ChitChat",
+  "description": "Scalable chat app on Next.js",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0070f3",
+  "orientation": "portrait-primary",
+  "categories": ["social", "communication"],
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/manifest-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/manifest-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/manifest-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "monochrome"
+    }
+  ]
+}
+
+/**
+ * Copyright 2018 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// If the loader is already loaded, just stop.
+if (!self.define) {
+  let registry = {};
+
+  // Used for `eval` and `importScripts` where we can't get script URL by other means.
+  // In both cases, it's safe to use a global var because those functions are synchronous.
+  let nextDefineUri;
+
+  const singleRequire = (uri, parentUri) => {
+    uri = new URL(uri + ".js", parentUri).href;
+    return registry[uri] || (
+      
+        new Promise(resolve => {
+          if ("document" in self) {
+            const script = document.createElement("script");
+            script.src = uri;
+            script.onload = resolve;
+            document.head.appendChild(script);
+          } else {
+            nextDefineUri = uri;
+            importScripts(uri);
+            resolve();
+          }
+        })
+      
+      .then(() => {
+        let promise = registry[uri];
+        if (!promise) {
+          throw new Error(`Module ${uri} didn’t register its module`);
+        }
+        return promise;
+      })
+    );
+  };
+
+  self.define = (depsNames, factory) => {
+    const uri = nextDefineUri || ("document" in self ? document.currentScript.src : "") || location.href;
+    if (registry[uri]) {
+      // Module is already loading or loaded.
+      return;
+    }
+    let exports = {};
+    const require = depUri => singleRequire(depUri, uri);
+    const specialDeps = {
+      module: { uri },
+      exports,
+      require
+    };
+    registry[uri] = Promise.all(depsNames.map(
+      depName => specialDeps[depName] || require(depName)
+    )).then(deps => {
+      factory(...deps);
+      return exports;
+    });
+  };
+}
+define(['./workbox-bd7e3b9b'], (function (workbox) { 'use strict';
+
+  importScripts();
+  self.skipWaiting();
+  workbox.clientsClaim();
+  workbox.registerRoute("/", new workbox.NetworkFirst({
+    "cacheName": "start-url",
+    plugins: [{
+      cacheWillUpdate: async ({
+        request,
+        response,
+        event,
+        state
+      }) => {
+        if (response && response.type === 'opaqueredirect') {
+          return new Response(response.body, {
+            status: 200,
+            statusText: 'OK',
+            headers: response.headers
+          });
+        }
+        return response;
+      }
+    }]
+  }), 'GET');
+  workbox.registerRoute(/.*/i, new workbox.NetworkOnly({
+    "cacheName": "dev",
+    plugins: []
+  }), 'GET');
+  self.__WB_DISABLE_DEV_LOGS = true;
+
+}));
+
+ /* /styles/reset.css */
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+
+/* 
+Современные мобильные браузеры, такие как Google Chrome и Safari, оснащены функцией обновления страницы, когда она тянется вниз.
+В некоторых браузерах, например в Chrome на Android, эта функция включена и для автономных PWA
+*/
+body {
+    overscroll-behavior-y: contain; /* Отключаем эффект "потягивания" страницы вниз */
+}
+
+.env пустой фаил
+
+/* /app/globals.css */
+
+/* :root {
+
+} */
+
+
+/* html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}*/
+
+* {
+  box-sizing: border-box;
+} 
+
+.background_main {
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle, skyblue 20%, steelblue 100%);
+  background-attachment: fixed;
+}
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+/* app/page.module.css */
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    text-align: center;
+    background-color: #f5f5f5;
+    padding: 20px;
+}
+
+.title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.subtitle {
+    font-size: 1.2rem;
+    color: #666;
+    margin-bottom: 2rem;
+}
+
+.button {
+    display: inline-block;
+    padding: 12px 24px;
+    background-color: #0070f3;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    transition: background-color 0.3s;
+}
+
+.button:hover {
+    background-color: #005bb5;
+}
+
+// app/loading.tsx
+// Глобальный индикатор загрузки для приложения (серверный компонент).
+
+export default function Loading() {
+    return (
+        <div className="loading-container">
+            <p>Loading ChitChat Dating...</p>
+        </div>
+    );
+}
+
+// app/layout.tsx
+import type { Metadata } from "next";
+import type { ReactNode } from 'react';
+
+import "@/styles/reset.css";
+import "./globals.css";
+import DeviceProvider from '@/app/providers/DeviceProvider';
+
+export const metadata: Metadata = {
+  title: "ChitChat PWA",
+  description: "Scalable chat app on Next.js",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <div className="background_main">
+          <DeviceProvider>
+            {children}
+          </DeviceProvider>
+        </div>
+      </body>
+    </html>
+  );
+}
+
+// app/page.tsx
+
+"use client";
+
+import DeviceDebug from '@/app/debug/DeviceDebug';
+
+export default function Page() {
+  return (
+    <div>
+      <p>ChitChat Dating</p>
+      <DeviceDebug />
+    </div>
+  );
+}
+
+
+// app/api/device/ip/route.ts
+
+import { NextResponse } from 'next/server';
+
+// Простое кэширование
+let cachedIP: string | null = null;
+let lastFetched = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // IP обновляется не чаще 1 раза в 5 минут, если кэш ещё не истёк.
+
+export async function GET() {
+  const now = Date.now();
+  
+  if (cachedIP && now - lastFetched < CACHE_DURATION) {
+    return NextResponse.json({ ip: cachedIP });
+  }
+
+  try {
+    const goResponse = await fetch('http://localhost:8181/api/device/ip', {
+      signal: AbortSignal.timeout(5000)
+    });
+
+    if (!goResponse.ok) {
+      throw new Error(`Go server responded with ${goResponse.status}`);
+    }
+
+    const data = await goResponse.json();
+    const ip = data.ip;
+    
+    if (ip && typeof ip === 'string') {
+      cachedIP = ip;
+      lastFetched = now;
+      return NextResponse.json({ ip });
+    } else {
+      throw new Error('Invalid IP address received');
+    }
+  } catch (error) {
+    console.error('Failed to fetch IP from Go server:', error);
+    
+    if (cachedIP) {
+      return NextResponse.json({ ip: cachedIP });
+    }
+    
+    return NextResponse.json({ ip: null });
+  }
+}
+
+// app/debug/DeviceDebug.tsx
+"use client";
+
+import { useDeviceStore } from '@/app/lib/store/deviceStore';
+import { useEffect, useState } from 'react';
+
+export default function DeviceDebug() {
+  const { deviceInfo, isDetected } = useDeviceStore();
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    // Zustand persist автоматически гидратирует состояние
+    setIsHydrated(true);
+  }, []);
+
+  if (!isHydrated) {
+    return <div>Загрузка состояния из localStorage...</div>;
+  }
+
+  if (!isDetected) {
+    return <div>Устройство ещё не определено</div>;
+  }
+
+  return (
+    <div style={{ 
+      position: 'fixed', 
+      bottom: '10px', 
+      right: '10px', 
+      background: '#fff', 
+      padding: '10px', 
+      border: '1px solid #ccc', 
+      borderRadius: '4px',
+      fontSize: '12px',
+      zIndex: 1000,
+      maxWidth: '300px'
+    }}>
+      <h4>Device Info (Debug)</h4>
+      <p><strong>IP:</strong> {deviceInfo.ipAddress || '—'}</p>
+      <p><strong>Device ID:</strong> {deviceInfo.deviceId}</p>
+      <p><strong>Type:</strong> {deviceInfo.deviceType}</p>
+      <p><strong>Platform:</strong> {deviceInfo.platform}</p>
+      <p><strong>Language:</strong> {deviceInfo.browserLanguage}</p>
+      <p><strong>Timezone:</strong> {deviceInfo.timezone}</p>
+      <p><strong>Local Time:</strong> {deviceInfo.localTime}</p>
+      <p><strong>Stored in localStorage:</strong> Да</p>
+    </div>
+  );
+}
+
+// app/lib/hooks/useDeviceDetection.ts
+
+import { useEffect } from 'react';
+import { useDeviceStore } from '../store/deviceStore';
+
+export const useDeviceDetection = () => {
+  const { isDetected, detectDevice } = useDeviceStore();
+
+  useEffect(() => {
+    if (!isDetected) {
+      detectDevice();
+    }
+  }, [isDetected]);
+};
+
+// app/lib/store/deviceStore.ts
+
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+export type DeviceType = 'mobile' | 'tablet' | 'desktop' | 'unknown';
+
+export interface DeviceInfo {
+  userAgent: string;
+  ipAddress: string | null;
+  browserLanguage: string;
+  deviceId: string;
+  deviceType: DeviceType;
+  timezone: string;
+  timezoneUTC: string;
+  timezoneOffset: number;
+  platform: string;
+  localTime: string;
+}
+
+interface DeviceState {
+  deviceInfo: DeviceInfo;
+  isDetected: boolean;
+  setIPAddress: (ip: string) => void;
+  detectDevice: () => Promise<void>;
+  generateDeviceId: () => string;
+  updateLocalTime: () => void;
+}
+
+const generateDeviceId = (): string => {
+  if (typeof window === 'undefined') return 'server-side';
+  
+  const signals = [
+    navigator.userAgent,
+    navigator.language,
+    screen.width,
+    screen.height,
+    screen.colorDepth,
+    new Date().getTimezoneOffset(),
+    navigator.platform
+  ].join('|');
+
+  let hash = 0;
+  for (let i = 0; i < signals.length; i++) {
+    const char = signals.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  
+  return Math.abs(hash).toString(36);
+};
+
+const getCurrentLocalTime = (): string => {
+  const now = new Date();
+  return now.toLocaleTimeString('ru-RU', { 
+    hour: '2-digit', 
+    minute: '2-digit'
+    // Убираем seconds для чистоты
+  });
+};
+
+const getTimezoneUTC = (offset: number): string => {
+  const sign = offset <= 0 ? '+' : '-';
+  const absOffset = Math.abs(offset);
+  const hours = Math.floor(absOffset / 60);
+  return `UTC${sign}${hours}`;
+};
+
+const detectDeviceType = (userAgent: string): DeviceType => {
+  const ua = userAgent.toLowerCase();
+  
+  if (/mobile|iphone|ipod|android|blackberry|opera mini|opera mobi/i.test(ua)) {
+    return 'mobile';
+  }
+  if (/tablet|ipad|android(?!.*mobile)|kindle|silk/i.test(ua)) {
+    return 'tablet';
+  }
+  return 'desktop';
+};
+
+// получение платформы
+const getPlatform = (userAgent: string): string => {
+  const ua = userAgent.toLowerCase();
+  
+  if (ua.includes('android')) return 'Android';
+  if (ua.includes('iphone') || ua.includes('ipad')) return 'iOS';
+  if (ua.includes('windows')) return 'Windows';
+  if (ua.includes('mac')) return 'macOS';
+  if (ua.includes('linux')) return 'Linux';
+  
+  return 'unknown';
+};
+
+export const useDeviceStore = create<DeviceState>()(
+  persist(
+    (set, get) => ({
+      deviceInfo: {
+        userAgent: '',
+        ipAddress: null,
+        browserLanguage: 'en',
+        deviceId: '',
+        deviceType: 'unknown',
+        timezone: 'UTC',
+        timezoneUTC: 'UTC+0',
+        timezoneOffset: 0,
+        platform: 'unknown',
+        localTime: '00:00'
+      },
+      isDetected: false,
+
+      generateDeviceId,
+
+      detectDevice: async () => {
+        if (typeof window === 'undefined') return;
+
+        const userAgent = navigator.userAgent;
+        const deviceType = detectDeviceType(userAgent);
+        const deviceId = get().generateDeviceId();
+        const platform = getPlatform(userAgent);
+        const timezoneOffset = new Date().getTimezoneOffset();
+        const timezoneUTC = getTimezoneUTC(timezoneOffset);
+
+        set({
+          deviceInfo: {
+            userAgent,
+            ipAddress: null,
+            browserLanguage: navigator.language || 'en',
+            deviceId,
+            deviceType,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            timezoneUTC,
+            timezoneOffset,
+            platform,
+            localTime: getCurrentLocalTime()
+          },
+          isDetected: true
+        });
+
+        // Запрашиваем IP
+        try {
+          const response = await fetch('/api/device/ip');
+          const data = await response.json();
+          if (data.ip) {
+            get().setIPAddress(data.ip);
+          }
+        } catch (error) {
+          console.warn('Failed to fetch IP address');
+        }
+      },
+
+      setIPAddress: (ip) => set((state) => ({
+        deviceInfo: { 
+          ...state.deviceInfo, 
+          ipAddress: ip 
+        }
+      })),
+
+      updateLocalTime: () => set((state) => ({
+        deviceInfo: {
+          ...state.deviceInfo,
+          localTime: getCurrentLocalTime()
+        }
+      }))
+    }),
+    {
+      name: 'device-storage',
+      partialize: (state) => ({
+        deviceInfo: {
+          userAgent: state.deviceInfo.userAgent,
+          browserLanguage: state.deviceInfo.browserLanguage,
+          deviceId: state.deviceInfo.deviceId,
+          deviceType: state.deviceInfo.deviceType,
+          timezone: state.deviceInfo.timezone,
+          timezoneUTC: state.deviceInfo.timezoneUTC,
+          timezoneOffset: state.deviceInfo.timezoneOffset,
+          platform: state.deviceInfo.platform
+        },
+        isDetected: state.isDetected
+      })
+    }
+  )
+);
+
+// app/providers/DeviceProvider.tsx
+"use client";
+
+import { useDeviceDetection } from '@/app/lib/hooks/useDeviceDetection';
+
+export default function DeviceProvider({ 
+  children 
+}: { 
+  children: React.ReactNode 
+}) {
+  useDeviceDetection();
+  
+  return <>{children}</>;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

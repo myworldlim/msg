@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS password_recovery (
+    uid VARCHAR(20) PRIMARY KEY,
+    token VARCHAR(20) NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (uid) REFERENCES users(uid)
+);

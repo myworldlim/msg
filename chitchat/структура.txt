@@ -1,0 +1,815 @@
+/frontend
+├── app
+│   ├── (auth)
+│   │   ├── layout.tsx          # Общий лейаут для всех страниц аутентификации
+│   │   ├── loading.tsx         # Глобальный loading для аутентификации
+│   │   ├── page.tsx            # Главная страница: выбор метода (email/phone)
+│   │   ├── open/               # Страница ввода номера или email
+│   │   │   ├── page.tsx        # Ввод кода (email/SMS)
+│   │   │   └── 
+│   │   ├── verify/             # Универсальная страница верификации
+│   │   │   ├── page.tsx        # Ввод кода (email/SMS)
+│   │   │   └── success.tsx     # Успешная верификация
+│   │   ├── password/
+│   │   │   ├── page.tsx        # Ввод пароля (если есть аккаунт)
+│   │   │   └── set.tsx         # Установка пароля (если нового пользователя)
+│   │   ├── secret/
+│   │   │   ├── page.tsx        # Ввод кодового слова
+│   │   │   └── set.tsx         # Установка кодового слова
+│   │   └── security-policy/
+│   │       └── page.tsx        # Политика безопасности
+│   │
+│   ├── (protected)
+│   │   ├── layout.tsx          # Главный лейаут с WebSocketProvider, меню
+│   │   ├── loading.tsx         # Глобальный loading для защищённых страниц
+│   │   ├──
+│   │   ├── messenger/          # Основной мессенджер
+│   │   │   ├── layout.tsx      # Лейаут мессенджера (чаты слева, сообщения справа)
+│   │   │   ├── page.tsx        # Список чатов (по умолчанию)
+│   │   │   ├── [chatId]/       # Динамический чат
+│   │   │   │   └── page.tsx
+│   │   │   └── components/     # ChatList, MessageInput, etc.
+│   │   │
+│   │   ├── user/               # Профиль и настройки
+│   │   │   ├── layout.tsx
+│   │   │   ├── page.tsx        # Обзор профиля
+│   │   │   ├── settings/
+│   │   │   │   └── page.tsx    # Настройки аккаунта
+│   │   │   ├── security/       # Безопасность (2FA, сессии)
+│   │   │   │   └── page.tsx
+│   │   │   └── components/     # ProfileCard, etc.
+│   │   │
+│   │   ├── dating/             # 18+ раздел
+│   │   │   ├── layout.tsx
+│   │   │   ├── page.tsx        # Главная (свайпы)
+│   │   │   ├── matches/        # Совпадения
+│   │   │   └── profile/        # Профиль другого пользователя
+│   │   │
+│   │   ├── invite/
+│   │   │   ├── [inviteId]/
+│   │   │   │   └── page.tsx    # Принятие приглашения
+│   │   │   └── sent/           # Отправленные приглашения
+│   │   │
+│   │   └── api/                # API-роуты ТОЛЬКО для защищённых данных
+│   │       ├── messenger/
+│   │       ├── user/
+│   │       └── dating/
+│   │
+│   ├── api/                    # Публичные API-роуты
+│   │   ├── auth/               # Регистрация, вход, верификация
+│   │   ├── device/             # Получение IP, device info
+│   │   └── public/             # Публичные данные (например, приглашения)
+│   │
+│   ├── lib/                    # Общие утилиты
+│   │   ├── store/              # Zustand stores (auth, device, chat)
+│   │   ├── hooks/              # Кастомные хуки (useAuth, useDevice)
+│   │   └── providers/          # AuthProvider, WebSocketProvider
+│   │
+│   ├── globals.css
+│   ├── layout.tsx              # Корневой layout (HTML, body)
+│   └── page.tsx                # Лендинг для неавторизованных
+│
+├── public/                     # Статические файлы (иконки PWA, логотипы)
+└── .env.local
+
+
+
+
+/frontend
+├── app/
+│   ├── (preview)/
+│   │   ├── layout.tsx                 # Общий layout 
+│   │   ├── loading.tsx                 
+│   │   └── /preview
+│   │       └── page.tsx
+│   │
+│   ├── (auth)/
+│   │   ├── layout.tsx                 # Общий layout аутентификации
+│   │   ├── page.tsx                   # Главная: ввод email/телефона
+│   │   ├── verify/
+│   │   │   └── page.tsx               # Универсальная верификация кода
+│   │   ├── password/
+│   │   │   ├── page.tsx               # Ввод пароля (существующий пользователь)
+│   │   │   └── set/
+│   │   │       └── page.tsx           # Установка пароля (новый пользователь)
+│   │   ├── secret/
+│   │   │   ├── page.tsx               # Ввод кодового слова
+│   │   │   └── set/
+│   │   │       └── page.tsx           # Установка кодового слова
+│   │   └── security-policy/
+│   │       └── page.tsx               # Политика безопасности
+│   │
+│   ├── (protected)/
+│   │   ├── layout.tsx                 # Главный layout с WebSocketProvider
+│   │   ├── loading.tsx                # Загрузка защищенных страниц
+│   │   ├── @menu/
+│   │   │   └── default.tsx            # Боковое меню (интерцептинг роут)
+│   │   │
+│   │   ├── messenger/
+│   │   │   ├── layout.tsx             # Layout мессенджера
+│   │   │   ├── page.tsx               # Список чатов
+│   │   │   ├── [chatId]/
+│   │   │   │   └── page.tsx           # Конкретный чат
+│   │   │   ├── groups/
+│   │   │   │   └── page.tsx           # Групповые чаты
+│   │   │   ├── contacts/
+│   │   │   │   └── page.tsx           # Контакты
+│   │   │   ├── calls/
+│   │   │   │   └── page.tsx           # Звонки
+│   │   │   └── components/            # Компоненты мессенджера
+│   │   │       ├── ChatList/
+│   │   │       ├── MessageInput/
+│   │   │       └── MessageBubble/
+│   │   │
+│   │   ├── user/
+│   │   │   ├── layout.tsx
+│   │   │   ├── page.tsx               # Профиль пользователя
+│   │   │   ├── account/
+│   │   │   │   └── page.tsx           # Управление аккаунтом
+│   │   │   ├── settings/
+│   │   │   │   └── page.tsx           # Настройки
+│   │   │   ├── notifications/
+│   │   │   │   └── page.tsx           # Уведомления
+│   │   │   └── components/            # Компоненты профиля
+│   │   │
+│   │   ├── dating/
+│   │   │   ├── layout.tsx
+│   │   │   ├── page.tsx               # Главная знакомств
+│   │   │   ├── matches/
+│   │   │   │   └── page.tsx           # Совпадения
+│   │   │   ├── search/
+│   │   │   │   └── page.tsx           # Поиск
+│   │   │   └── components/            # Компоненты знакомств
+│   │   │
+│   │   ├── invite/
+│   │   │   ├── layout.tsx
+│   │   │   ├── page.tsx               # Приглашения
+│   │   │   └── [inviteId]/
+│   │   │       └── page.tsx           # Конкретное приглашение
+│   │   │
+│   │   └── api/                       # ЗАЩИЩЕННЫЕ API endpoints
+│   │       ├── messenger/
+│   │       │   └── route.ts
+│   │       ├── user/
+│   │       │   └── route.ts
+│   │       ├── dating/
+│   │       │   └── route.ts
+│   │       └── invite/
+│   │           └── route.ts
+│   │
+│   ├── api/                           # ПУБЛИЧНЫЕ API endpoints
+│   │   ├── auth/
+│   │   │   ├── route.ts               # Авторизация
+│   │   │   └── verify/
+│   │   │       └── route.ts           # Верификация
+│   │   ├── device/
+│   │   │   └── ip/
+│   │   │       └── route.ts           # Получение IP
+│   │   └── public/
+│   │       └── route.ts               # Публичные данные
+│   │
+│   ├── lib/
+│   │   ├── store/                     # Zustand stores
+│   │   │   ├── index.ts
+│   │   │   ├── authStore.ts
+│   │   │   ├── deviceStore.ts
+│   │   │   ├── chatStore.ts
+│   │   │   └── uiStore.ts
+│   │   ├── hooks/                     # Кастомные хуки
+│   │   │   ├── useAuth.ts
+│   │   │   ├── useDevice.ts
+│   │   │   ├── useWebSocket.ts
+│   │   │   └── useChat.ts
+│   │   ├── providers/                 # Провайдеры контекста
+│   │   │   ├── AuthProvider.tsx
+│   │   │   ├── WebSocketProvider.tsx
+│   │   │   └── AppProviders.tsx
+│   │   ├── utils/                     # Утилиты
+│   │   │   ├── device.ts
+│   │   │   ├── auth.ts
+│   │   │   └── api.ts
+│   │   └── types/                     # TypeScript типы
+│   │       ├── auth.ts
+│   │       ├── chat.ts
+│   │       └── device.ts
+│   │
+│   ├── components/                    # ОБЩИЕ компоненты
+│   │   ├── ui/                        # Базовые UI компоненты
+│   │   │   ├── Button/
+│   │   │   ├── Input/
+│   │   │   ├── Modal/
+│   │   │   └── Loader/
+│   │   ├── layout/                    # Компоненты layout
+│   │   │   ├── Header/
+│   │   │   ├── Sidebar/
+│   │   │   └── Footer/
+│   │   └── shared/                    # Переиспользуемые компоненты
+│   │       ├── AuthForm/
+│   │       └── SecurityPolicy/
+│   │
+│   ├── styles/                        # Стили
+│   │   ├── globals.css
+│   │   ├── reset.css
+│   │   └── variables.css
+│   │
+│   ├── layout.tsx                     # Корневой layout
+│   ├── page.tsx                       # Главная страница
+│   ├── loading.tsx                    # Глобальная загрузка
+│   └── middleware.ts                  # Middleware для защиты
+│
+├── public/                            # Статические файлы
+│   ├── manifest.json
+│   ├── sw.js
+│   └── icons/
+│
+├── types/                             # Глобальные типы
+├── .env.local
+└── next.config.js
+
+
+
+
+
+
+
+/frontend
+├── app/
+│   ├── (auth)/                   # Аутентификация
+│   ├── (protected)/              # Защищенные страницы  
+│   ├── api/                      # API routes
+│   │   └── device/
+│   │       └── ip/
+│   │           └── route.ts      # Получение IP
+│   ├── lib/
+│   │   └── store/
+│   │       └── deviceStore.ts    # Zustand store
+│   └── layout.tsx                # Корневой layout
+│
+└── public/
+
+
+
+
+/frontend
+ ├── app
+ │   ├── (auth)
+ │   │   ├── auth
+ │   │   │   ├── api/
+ │   │   │   │   ├── route.ts (если нужен будет)
+ │   │   │   ├── page.jsx  (компонента SendAccess)
+ │   │   │   ├── openIdentifier.jsx  (Компонент для ввода email/number)
+ │   │   │   ├── auth.module.css
+ │   │   │   ├── 
+ │   │   ├── password
+ │   │   │   ├── login/ (если пользователь существует)
+ │   │   │   │   ├── api/
+ │   │   │   │   │   ├── route.ts (если нужен будет)
+ │   │   │   │   ├── page.jsx  (Страница ввода пароля)
+ │   │   │   │   ├── passwordloginInput.jsx  (Компонент для проверки пароля)
+ │   │   │   │   ├── passwordlogin.module.css
+ │   │   │   │   ├── 
+ │   │   │   ├── register/ (если пользовательне не существует)
+ │   │   │   │   ├── api/
+ │   │   │   │   │   ├── route.ts (если нужен будет)
+ │   │   │   │   ├── page.jsx  (Страница создания пароля)
+ │   │   │   │   ├── passwordregisterInput.jsx  (Компонент для проверки пароля)
+ │   │   │   │   ├── passwordregister.module.css
+ │   │   │   │   ├── 
+ │   │   ├── secret
+ │   │   │   ├── login/ (если пользователь существует)
+ │   │   │   │   ├── api/
+ │   │   │   │   │   ├── route.ts (если нужен будет)
+ │   │   │   │   ├── page.jsx  (Страница ввода кодового слова)
+ │   │   │   │   ├── secretLoginInput.jsx  (Компонент для ввода кодового слова)
+ │   │   │   │   ├── secretLogin.module.css
+ │   │   │   │   ├── 
+ │   │   │   ├── register/ (если пользовательне не существует)
+ │   │   │   │   ├── api/
+ │   │   │   │   │   ├── route.ts (если нужен будет)
+ │   │   │   │   ├── page.jsx  (Страница создания кодового слова)
+ │   │   │   │   ├── SecreetRegisterInput.jsx  (Компонент для создания кодового слова)
+ │   │   │   │   ├── SecreetRegister.module.css
+ │   │   │   │   ├──  
+ │   │   ├── securitypolicy (находится подвал где описание политики безопасности и правила)
+ │   │   │   ├──  SecurityPolicy.jsx
+ │   │   ├── authLayout.module.css (Главный стили папки (auth))
+ │   │   ├── layout.jsx (Главный лейаут папки (auth))
+
+ │   ├── (protected)
+ │   │   ├── api
+ │   │   │   └── route.ts // обработка авторизированного пользователя
+ │   │   ├── @menu
+ │   │   │   ├──  
+ │   │   │   ├── default.js        # Стандартное меню
+ │   │   │   └── page.jsx
+ │   │   ├── (Messenger) // Мессенджер
+ │   │   │   ├── components
+ │   │   │   ├── (chats)
+ │   │   │   │   ├── 
+ │   │   │   │   ├── 
+ │   │   │   │   └── page.jsx
+ │   │   │   ├── (groups)
+ │   │   │   │   ├── 
+ │   │   │   │   ├── 
+ │   │   │   │   └── page.jsx
+ │   │   │   ├── (contacts)
+ │   │   │   │   ├── 
+ │   │   │   │   ├── 
+ │   │   │   │   └── page.jsx
+ │   │   │   ├── (calls)
+ │   │   │   │   ├── 
+ │   │   │   │   ├── 
+ │   │   │   │   └── page.jsx
+ │   │   │   ├── layout.jsx (Главный лейаут папки (Messenger))
+ │   │   │   └── loading.jsx (Главный loading папки (Messenger)) 
+ │   │   ├── (User) // Пользователь
+ │   │   │   ├── 
+ │   │   │   ├──  
+ │   │   │   ├── account/
+ │   │   │   │   └── page.jsx
+ │   │   │   ├── settings 
+ │   │   │   │   └── page.jsx
+ │   │   │   ├── notifications
+ │   │   │   │   └── page.jsx
+ │   │   │   ├── userLayout.module.css
+ │   │   │   ├── layout.jsx (Главный лейаут папки (User))
+ │   │   │   └── loading.jsx (Главный loading папки (User))
+ │   │   ├── (Dating) // Раздел 18+ для знакомства
+ │   │   │   ├── 
+ │   │   │   ├──  
+ │   │   │   ├──  
+ │   │   │   ├── page.jsx
+ │   │   │   ├── layout.jsx (Главный лейаут папки (Dating))
+ │   │   │   └── loading.jsx (Главный loading папки (Dating)) 
+ │   │   ├── (Invite) // Приглашение
+ │   │   │   ├──  
+ │   │   │   ├── page.jsx
+ │   │   │   │   └── [inviteId]/
+ │   │   │   │       └── page.jsx 
+ │   │   │   ├──  
+ │   │   │   ├──  
+ │   │   │   ├── layout.jsx (Главный лейаут папки (Invite))
+ │   │   │   └── loading.jsx (Главный loading папки (Invite))  
+ │   │   ├── layout.jsx (Главный лейаут папки (protected)) # Общий layout с WebSocketProvider
+ │   │   └── loading.jsx (Главный loading папки (protected))
+
+
+
+ │   ├── .env
+ │   ├── .env.local
+ │   ├── globals.css
+ │   ├── layout.jsx (Главный layout папки (app))
+ │   ├── loading.jsx (Главный loading папки (app))
+ │   ├── middleware.ts
+ │   ├── page.jsx (Главный page папки (app))
+ │   ├── page.module.css (Главный page папки (app))
+
+
+
+Пользователь заходит на chitchat.dating
+        ↓
+app/layout.tsx → только HTML-оболочка (без логики)
+        ↓
+app/page.tsx → главная точка входа:
+               - вызывает утилиту проверки сессии
+               - решает, куда перенаправить
+        ↓
+(auth) или (protected) → свои layout'ы делают дополнительную проверку
+
+
+
+
+
+/frontend
+├── app/
+│   ├── layout.tsx                 ← HTML-оболочка (без логики)
+│   ├── page.tsx                   ← Главная точка входа (с логикой)
+│   │
+│   ├── (auth)/
+│   │   └── layout.tsx             ← Защита auth-зоны
+│   │
+│   └── (protected)/
+│       └── layout.tsx             ← Защита защищённой зоны
+│
+└── lib/
+    └── server-auth.ts             ← Утилита проверки сессии (мозг системы)
+
+/frontend
+├── app/                          # Изменено: 
+│   ├── layout.tsx                # Новый: корневой HTML с провайдерами, без логики авторизации
+│   ├── page.tsx                  # Новый: главная точка входа с проверкой authStatus и редиректами
+│   │
+│   ├── (auth)/                   # Аутентификация (изменено: добавлен layout.tsx для проверки перед входом)
+│   │   └── layout.tsx            # Новый: защита auth-зоны с проверкой неавторизованных
+│   │
+│   ├── (preview)/                # Превью-страницы
+│   │
+│   ├── (protected)/              # Защищенные страницы 
+│   │   └── layout.tsx            # Новый: защита защищённой зоны с проверкой авторизованных
+│   │
+│   └── api/  
+│       └── auth/
+│           └── ip/                    # API routes (без изменений)
+│       └── device/
+│           └── ip/
+│               └── route.ts      # Получение IP (без изменений)
+│
+├── lib/                          # Изменено: добавлен server-auth.ts
+│   ├── hooks/                    # Кастомные хуки
+│   │   └── useAuth.ts            # Изменено: добавлен хук для получения authStatus
+│   ├── auth/                     # Авторизация
+│   │   └── getAuth.ts            # утилита проверки сессии (мозг системы)
+│   └── store/                    # Zustand stores
+│       ├── deviceStore.ts        # 
+│       └── authStore.ts          # 
+│
+└── public/                       # Статические файлы (без изменений)
+
+├── app
+│   ├── (auth)
+│   │   ├── blocked
+│   │   │   ├── page.tsx
+│   │   ├── open
+│   │   │   ├── page.tsx
+│   │   ├── password
+│   │   │   ├── login
+│   │   │   │   ├── page.tsx
+│   │   │   ├── register
+│   │   │   │   ├── page.tsx
+│   │   ├── secret
+│   │   │   ├── login
+│   │   │   │   ├── page.tsx
+│   │   │   ├── register
+│   │   │   │   ├── page.tsx
+│   ├── (protected)
+│   │   ├── dashboard
+│   │   │   ├── page.tsx
+│   ├── layout.tsx
+│   ├── page.tsx
+├── lib
+│   ├── models
+│   │   ├── auth
+│   │   │   ├── authModel.ts
+│   │   │   ├── types.ts
+│   │   │   ├── index.ts
+│   │   ├── device
+│   │   │   ├── deviceModel.ts
+│   │   │   ├── types.ts
+│   │   │   ├── index.ts
+│   ├── api
+│   │   ├── authApi.ts
+│   │   ├── deviceApi.ts
+│   ├── utils
+│   │   ├── fetchClient.ts
+├── public
+│   ├── manifest.json
+│   ├── sw.js
+├── .babelrc
+├── .env.local
+├── .eslintrc.json
+├── next.config.js
+├── package.json
+
+
+
+app/
+├── (protected)/
+│   ├── @menu/
+│   │   ├── default.tsx           # Основное меню
+│   │   ├── apps/                 # Мини-приложения в меню
+│   │   │   ├── dating/           # Знакомства
+│   │   │   │   ├── page.tsx      # Мини-виджет в меню
+│   │   │   │   └── widget.tsx    # Компонент виджета
+│   │   │   ├── jobs/             # Работа рядом
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── widget.tsx
+│   │   │   ├── events/           # События рядом
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── widget.tsx
+│   │   │   └── marketplace/      # Барахолка
+│   │   │       ├── page.tsx
+│   │   │       └── widget.tsx
+│   │   └── components/
+│   │       ├── MenuSidebar.tsx   # Основное меню
+│   │       └── AppWidget.tsx     # Обертка для виджетов
+│   │
+│   ├── apps/                     # Полные версии мини-приложений
+│   │   ├── dating/
+│   │   │   ├── page.tsx          # Главная страница приложения
+│   │   │   ├── profile/[id]/
+│   │   │   ├── matches/
+│   │   │   └── settings/
+│   │   ├── jobs/
+│   │   │   ├── page.tsx
+│   │   │   ├── search/
+│   │   │   ├── my-applications/
+│   │   │   └── create-vacancy/
+│   │   └── events/
+│   │       ├── page.tsx
+│   │       ├── create/
+│   │       └── my-events/
+
+
+
+
+app/
+├── layout.tsx                    # Корневой HTML layout
+├── page.tsx                      # Главная точка входа с проверкой авторизации
+├── middleware.ts                 # Middleware для маршрутизации
+│
+├── (auth)/                       # Зона аутентификации
+│   ├── layout.tsx                # Layout для неавторизованных
+│   ├── auth/
+│   │   ├── open/
+│   │   │   └── page.tsx          # Ввод email/телефона
+│   │   ├── password/
+│   │   │   ├── login/
+│   │   │   │   └── page.tsx      # Вход по паролю
+│   │   │   └── register/
+│   │   │       └── page.tsx      # Создание пароля
+│   │   ├── secret/
+│   │   │   ├── login/
+│   │   │   │   └── page.tsx      # Ввод кодового слова
+│   │   │   └── register/
+│   │   │       └── page.tsx      # Создание кодового слова
+│   │   ├── blocked/
+│   │   │   └── page.tsx          # Заблокированный аккаунт
+│   │   └── logout/
+│   │       └── page.tsx          # Выход из системы
+│   └── (preview)/                # Превью страницы
+│       └── preview/
+│           └── page.tsx          # Страница приглашения к регистрации
+│
+├── (protected)/                  # Защищенная зона (только авторизованные)
+│   ├── layout.tsx                # Layout с WebSocket, проверка авторизации
+│   ├── loading.tsx               # Глобальный loading
+│   │
+│   ├── @menu/                    # Параллельный слот - боковое меню
+│   │   ├── default.tsx           # Основное меню
+│   │   ├── apps/                 # Виджеты мини-приложений в меню
+│   │   │   ├── dating/
+│   │   │   │   └── widget.tsx    # Виджет знакомств
+│   │   │   ├── jobs/
+│   │   │   │   └── widget.tsx    # Виджет работы
+│   │   │   ├── events/
+│   │   │   │   └── widget.tsx    # Виджет событий
+│   │   │   └── marketplace/
+│   │   │       └── widget.tsx    # Виджет барахолки
+│   │   └── components/
+│   │       ├── MenuSidebar.tsx   # Компонент бокового меню
+│   │       └── AppWidget.tsx     # Обертка для виджетов
+│   │
+│   ├── (messenger)/              # Основной мессенджер
+│   │   ├── layout.tsx            # Layout мессенджера
+│   │   ├── loading.tsx           # Loading мессенджера
+│   │   ├── page.tsx              # Главная мессенджера (список чатов)
+│   │   ├── (chats)/
+│   │   │   ├── page.tsx          # Список всех чатов
+│   │   │   └── [chatId]/
+│   │   │       ├── page.tsx      # Конкретный чат
+│   │   │       └── loading.tsx   # Loading чата
+│   │   ├── (groups)/
+│   │   │   ├── page.tsx          # Список групп
+│   │   │   ├── create/
+│   │   │   │   └── page.tsx      # Создание группы
+│   │   │   └── [groupId]/
+│   │   │       ├── page.tsx      # Конкретная группа
+│   │   │       └── settings/
+│   │   │           └── page.tsx  # Настройки группы
+│   │   ├── (contacts)/
+│   │   │   ├── page.tsx          # Список контактов
+│   │   │   └── add/
+│   │   │       └── page.tsx      # Добавление контакта
+│   │   ├── (calls)/
+│   │   │   ├── page.tsx          # История звонков
+│   │   │   └── [callId]/
+│   │   │       └── page.tsx      # Активный звонок
+│   │   └── components/
+│   │       ├── ChatList.tsx      # Список чатов
+│   │       ├── MessageInput.tsx  # Ввод сообщений
+│   │       ├── MessageBubble.tsx # Сообщение
+│   │       └── CallInterface.tsx # Интерфейс звонков
+│   │
+│   ├── (user)/                   # Профиль и настройки пользователя
+│   │   ├── layout.tsx            # Layout пользователя
+│   │   ├── loading.tsx           # Loading пользователя
+│   │   ├── page.tsx              # Обзор профиля
+│   │   ├── account/
+│   │   │   └── page.tsx          # Настройки аккаунта
+│   │   ├── settings/
+│   │   │   ├── page.tsx          # Основные настройки
+│   │   │   ├── privacy/
+│   │   │   │   └── page.tsx      # Приватность
+│   │   │   └── notifications/
+│   │   │       └── page.tsx      # Уведомления
+│   │   ├── security/
+│   │   │   ├── page.tsx          # Безопасность
+│   │   │   ├── sessions/
+│   │   │   │   └── page.tsx      # Активные сессии
+│   │   │   └── two-factor/
+│   │   │       └── page.tsx      # Двухфакторная аутентификация
+│   │   └── components/
+│   │       ├── ProfileCard.tsx   # Карточка профиля
+│   │       └── SettingsMenu.tsx  # Меню настроек
+│   │
+│   ├── apps/                     # Полные версии мини-приложений
+│   │   ├── dating/               # Приложение знакомств
+│   │   │   ├── layout.tsx        # Layout знакомств
+│   │   │   ├── page.tsx          # Главная (свайпы)
+│   │   │   ├── matches/
+│   │   │   │   └── page.tsx      # Совпадения
+│   │   │   ├── profile/
+│   │   │   │   └── [userId]/
+│   │   │   │       └── page.tsx  # Профиль пользователя
+│   │   │   ├── chat/
+│   │   │   │   └── [matchId]/
+│   │   │   │       └── page.tsx  # Чат с совпадением
+│   │   │   └── settings/
+│   │   │       └── page.tsx      # Настройки знакомств
+│   │   │
+│   │   ├── jobs/                 # Приложение работы
+│   │   │   ├── layout.tsx
+│   │   │   ├── page.tsx          # Поиск работы
+│   │   │   ├── search/
+│   │   │   │   └── page.tsx      # Расширенный поиск
+│   │   │   ├── applications/
+│   │   │   │   └── page.tsx      # Мои заявки
+│   │   │   ├── create-vacancy/
+│   │   │   │   └── page.tsx      # Создать вакансию
+│   │   │   └── [jobId]/
+│   │   │       └── page.tsx      # Конкретная вакансия
+│   │   │
+│   │   ├── events/               # Приложение событий
+│   │   │   ├── layout.tsx
+│   │   │   ├── page.tsx          # События рядом
+│   │   │   ├── create/
+│   │   │   │   └── page.tsx      # Создать событие
+│   │   │   ├── my-events/
+│   │   │   │   └── page.tsx      # Мои события
+│   │   │   └── [eventId]/
+│   │   │       └── page.tsx      # Конкретное событие
+│   │   │
+│   │   └── marketplace/          # Приложение барахолки
+│   │       ├── layout.tsx
+│   │       ├── page.tsx          # Объявления
+│   │       ├── create/
+│   │       │   └── page.tsx      # Создать объявление
+│   │       ├── my-ads/
+│   │       │   └── page.tsx      # Мои объявления
+│   │       └── [adId]/
+│   │           └── page.tsx      # Конкретное объявление
+│   │
+│   └── protected/                # Дефолтная защищенная страница
+│       └── page.tsx              # Дашборд или главная защищенной зоны
+│
+├── lib/                          # Утилиты и API
+│   ├── api/
+│   │   ├── auth.ts               # API авторизации
+│   │   ├── users.ts              # API пользователей
+│   │   ├── chats.ts              # API чатов
+│   │   ├── dating.ts             # API знакомств
+│   │   ├── jobs.ts               # API работы
+│   │   └── events.ts             # API событий
+│   ├── store/
+│   │   ├── authStore.ts          # Состояние авторизации
+│   │   ├── chatStore.ts          # Состояние чатов
+│   │   └── deviceStore.ts        # Информация об устройстве
+│   ├── hooks/
+│   │   ├── useAuth.ts            # Хук авторизации
+│   │   ├── useWebSocket.ts       # Хук WebSocket
+│   │   └── useChat.ts            # Хук чатов
+│   └── utils/
+│       ├── fetchClient.ts        # HTTP клиент
+│       └── websocket.ts          # WebSocket клиент
+│
+└── public/                       # Статические файлы
+    ├── manifest.json             # PWA манифест
+    ├── sw.js                     # Service Worker
+    └── icons/                    # Иконки приложения
+
+
+можешь сказать url какой будет если папка начинается в круглых скобках название , можешь подробнее рассказать как роутинг будет в next 16 версии
+
+Роутинг в Next.js 16 с круглыми скобками
+Круглые скобки = Route Groups (не влияют на URL)
+Папки в круглых скобках НЕ создают сегменты URL. Они используются только для организации кода.
+
+Примеры URL из нашей структуры:
+(auth) группа:
+Папка: app/(auth)/auth/open/page.tsx
+URL:   http://localhost:3000/auth/open
+
+Папка: app/(auth)/auth/password/login/page.tsx  
+URL:   http://localhost:3000/auth/password/login
+
+Папка: app/(auth)/preview/page.tsx
+URL:   http://localhost:3000/preview
+
+Copy
+(protected) группа:
+Папка: app/(protected)/protected/page.tsx
+URL:   http://localhost:3000/protected
+
+Папка: app/(protected)/(messenger)/chats/page.tsx
+URL:   http://localhost:3000/chats
+
+Папка: app/(protected)/(messenger)/chats/[chatId]/page.tsx
+URL:   http://localhost:3000/chats/123
+
+Папка: app/(protected)/(user)/account/page.tsx
+URL:   http://localhost:3000/account
+
+Папка: app/(protected)/apps/dating/page.tsx
+URL:   http://localhost:3000/apps/dating
+
+Copy
+Специальные файлы в Next.js 16:
+Layout файлы:
+app/(protected)/layout.tsx        → Применяется ко всем маршрутам в группе
+app/(protected)/(messenger)/layout.tsx → Вложенный layout для мессенджера
+
+Copy
+Параллельные маршруты (@):
+app/(protected)/@menu/default.tsx → Слот меню
+app/(protected)/@modal/default.tsx → Слот модалок
+
+URL остается тот же, но рендерятся параллельно:
+http://localhost:3000/chats → показывает page.tsx + @menu + @modal
+
+Copy
+Loading и Error:
+app/(protected)/loading.tsx       → Показывается при загрузке любой страницы в группе
+app/(protected)/error.tsx         → Показывается при ошибке
+app/(protected)/not-found.tsx     → 404 для группы
+
+Copy
+Детальные примеры URL:
+Мессенджер:
+/chats                    → Список чатов
+/chats/abc123            → Конкретный чат
+/groups                  → Список групп  
+/groups/xyz789           → Конкретная группа
+/contacts                → Контакты
+/calls                   → История звонков
+
+Copy
+Пользователь:
+/account                 → Профиль
+/settings                → Настройки
+/settings/privacy        → Приватность
+/security                → Безопасность
+/security/sessions       → Активные сессии
+
+Copy
+Мини-приложения:
+/apps/dating             → Знакомства
+/apps/dating/matches     → Совпадения
+/apps/dating/profile/123 → Профиль пользователя
+/apps/jobs               → Работа
+/apps/events             → События
+
+Copy
+Middleware и защита маршрутов:
+// middleware.ts
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+  
+  // Все что начинается с /auth - для неавторизованных
+  if (pathname.startsWith('/auth')) {
+    // проверка что пользователь НЕ авторизован
+  }
+  
+  // Все остальное - для авторизованных
+  if (pathname.startsWith('/chats') || 
+      pathname.startsWith('/apps') || 
+      pathname.startsWith('/account')) {
+    // проверка авторизации
+  }
+}
+
+export const config = {
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)']
+}
+
+Copy
+typescript
+Layout наследование:
+app/layout.tsx                    → Корневой (HTML, провайдеры)
+├── (auth)/layout.tsx            → Для неавторизованных
+└── (protected)/layout.tsx       → Для авторизованных + WebSocket
+    ├── (messenger)/layout.tsx   → Дополнительно для мессенджера
+    └── apps/dating/layout.tsx   → Дополнительно для знакомств
+
+Copy
+Ключевые особенности Next.js 16:
+Route Groups () - не влияют на URL, только на организацию
+
+Parallel Routes @ - рендерятся одновременно
+
+Dynamic Routes [] - создают параметры URL
+
+Nested Layouts - каскадное наследование
+
+Loading UI - автоматические состояния загрузки
+
+Таким образом, пользователь видит чистые URL без скобок, а мы получаем удобную организацию кода!

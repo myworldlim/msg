@@ -1,0 +1,1093 @@
+структура приложения будет примерно такая
+
+/frontend
+ ├── app
+ │   ├── status (здесь все статусы Zustand)
+ │   ├── (auth)
+ │   │   ├── open
+ │   │   │   ├── api/
+ │   │   │   │   ├── route.ts (если нужен будет)
+ │   │   │   ├── page.jsx  (компонента SendAccess)
+ │   │   │   ├── openIdentifier.jsx  (Компонент для ввода email/number)
+ │   │   │   ├── auth.module.css
+ │   │   │   ├── 
+ │   │   ├── password
+ │   │   │   ├── login/ (если пользователь существует)
+ │   │   │   │   ├── api/
+ │   │   │   │   │   ├── route.ts (если нужен будет)
+ │   │   │   │   ├── page.jsx  (Страница ввода пароля)
+ │   │   │   │   ├── passwordloginInput.jsx  (Компонент для проверки пароля)
+ │   │   │   │   ├── passwordlogin.module.css
+ │   │   │   │   ├── 
+ │   │   │   ├── register/ (если пользовательне не существует)
+ │   │   │   │   ├── api/
+ │   │   │   │   │   ├── route.ts (если нужен будет)
+ │   │   │   │   ├── page.jsx  (Страница создания пароля)
+ │   │   │   │   ├── passwordregisterInput.jsx  (Компонент для проверки пароля)
+ │   │   │   │   ├── passwordregister.module.css
+ │   │   │   │   ├── 
+ │   │   ├── secret
+ │   │   │   ├── login/ (если пользователь существует)
+ │   │   │   │   ├── api/
+ │   │   │   │   │   ├── route.ts (если нужен будет)
+ │   │   │   │   ├── page.jsx  (Страница ввода кодового слова)
+ │   │   │   │   ├── secretLoginInput.jsx  (Компонент для ввода кодового слова)
+ │   │   │   │   ├── secretLogin.module.css
+ │   │   │   │   ├── 
+ │   │   │   ├── register/ (если пользовательне не существует)
+ │   │   │   │   ├── api/
+ │   │   │   │   │   ├── route.ts (если нужен будет)
+ │   │   │   │   ├── page.jsx  (Страница создания кодового слова)
+ │   │   │   │   ├── SecreetRegisterInput.jsx  (Компонент для создания кодового слова)
+ │   │   │   │   ├── SecreetRegister.module.css
+ │   │   │   │   ├──  
+ │   │   ├── securitypolicy (находится подвал где описание политики безопасности и правила)
+ │   │   │   ├──  SecurityPolicy.jsx
+ │   │   ├── authLayout.module.css (Главный стили папки (auth))
+ │   │   ├── layout.jsx (Главный лейаут папки (auth))
+
+ │   ├── (protected)
+ │   │   ├── api
+ │   │   │   └── route.ts // обработка авторизированного пользователя
+ │   │   ├── @menu
+ │   │   │   ├──  
+ │   │   │   ├── default.js        # Стандартное меню
+ │   │   │   └── page.jsx
+ │   │   ├── (Messenger) // Мессенджер
+ │   │   │   ├── components
+ │   │   │   ├── (chats)
+ │   │   │   │   ├── 
+ │   │   │   │   ├── 
+ │   │   │   │   └── page.jsx
+ │   │   │   ├── (groups)
+ │   │   │   │   ├── 
+ │   │   │   │   ├── 
+ │   │   │   │   └── page.jsx
+ │   │   │   ├── (contacts)
+ │   │   │   │   ├── 
+ │   │   │   │   ├── 
+ │   │   │   │   └── page.jsx
+ │   │   │   ├── (calls)
+ │   │   │   │   ├── 
+ │   │   │   │   ├── 
+ │   │   │   │   └── page.jsx
+ │   │   │   ├── layout.jsx (Главный лейаут папки (Messenger))
+ │   │   │   └── loading.jsx (Главный loading папки (Messenger)) 
+ │   │   ├── (User) // Пользователь
+ │   │   │   ├── 
+ │   │   │   ├──  
+ │   │   │   ├── account/
+ │   │   │   │   └── page.jsx
+ │   │   │   ├── settings 
+ │   │   │   │   └── page.jsx
+ │   │   │   ├── notifications
+ │   │   │   │   └── page.jsx
+ │   │   │   ├── userLayout.module.css
+ │   │   │   ├── layout.jsx (Главный лейаут папки (User))
+ │   │   │   └── loading.jsx (Главный loading папки (User))
+ │   │   ├── (Dating) // Раздел 18+ для знакомства
+ │   │   │   ├── 
+ │   │   │   ├──  
+ │   │   │   ├──  
+ │   │   │   ├── page.jsx
+ │   │   │   ├── layout.jsx (Главный лейаут папки (Dating))
+ │   │   │   └── loading.jsx (Главный loading папки (Dating)) 
+ │   │   ├── (Invite) // Приглашение
+ │   │   │   ├──  
+ │   │   │   ├── page.jsx
+ │   │   │   │   └── [inviteId]/
+ │   │   │   │       └── page.jsx 
+ │   │   │   ├──  
+ │   │   │   ├──  
+ │   │   │   ├── layout.jsx (Главный лейаут папки (Invite))
+ │   │   │   └── loading.jsx (Главный loading папки (Invite)) 
+ │   │   ├── lib
+ │   │   │   ├──  
+ |   |   |   |  ├── 
+ │   │   │   ├── 
+ │   │   │   └──  
+ │   │   ├── layout.jsx (Главный лейаут папки (protected)) # Общий layout с WebSocketProvider
+ │   │   └── loading.jsx (Главный loading папки (protected))
+ │   ├── .env
+ │   ├── globals.css
+ │   ├── layout.jsx (Главный layout папки (app))
+ │   ├── loading.jsx (Главный loading папки (app))
+ │   ├── middleware.ts
+ │   ├── page.jsx (Главный page папки (app))
+ │   ├── page.module.css (Главный page папки (app))
+
+
+
+{
+  "name": "chitchat",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "dev:https": "concurrently \"next dev\" \"local-ssl-proxy --source 3001 --target 3000 --cert localhost.pem --key localhost-key.pem\"",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.90.2",
+    "@use-gesture/react": "^10.3.1",
+    "framer-motion": "^12.23.22",
+    "next": "15.5.4",
+    "next-pwa": "5.6.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "zustand": "5.0.8"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.28.4",
+    "@types/minimatch": "6.0.0",
+    "@types/node": "20",
+    "@types/react": "19",
+    "@types/react-dom": "19",
+    "concurrently": "^9.2.1",
+    "local-ssl-proxy": "^2.0.5",
+    "typescript": "^5"
+  }
+}
+
+
+const withPWA = require('next-pwa')({
+  dest: 'public', // Директория для сервис-воркера и манифеста
+  register: true, // Авторегистрация сервис-воркера
+  skipWaiting: true, // Активация нового SW сразу
+  disableDevLogs: true, // Убираем лишние логи Workbox в dev
+  // Добавьте эти настройки:
+  buildExcludes: [/middleware-manifest\.json$/],
+  mode: process.env.NODE_ENV === 'development' ? 'development' : 'production',
+  // Отключаем некоторые функции в разработке
+  disable: process.env.NODE_ENV === 'development',
+});
+
+module.exports = withPWA({
+  reactStrictMode: true, // Для строгого режима React
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+});
+
+
+ /* /styles/reset.css */
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+
+/* 
+Современные мобильные браузеры, такие как Google Chrome и Safari, оснащены функцией обновления страницы, когда она тянется вниз.
+В некоторых браузерах, например в Chrome на Android, эта функция включена и для автономных PWA
+*/
+body {
+    overscroll-behavior-y: contain;
+}
+
+{
+  "name": "ChitChat PWA",
+  "short_name": "ChitChat",
+  "description": "Scalable chat app on Next.js",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0070f3",
+  "orientation": "portrait-primary",
+  "categories": ["social", "communication"],
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/manifest-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/manifest-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/manifest-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "monochrome"
+    }
+  ]
+}
+
+
+/* /app/globals.css */
+
+/* :root {
+
+} */
+
+
+/* html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}*/
+
+* {
+  box-sizing: border-box;
+} 
+
+.background_main {
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle, skyblue 20%, steelblue 100%);
+  background-attachment: fixed;
+}
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+// app/loading.tsx
+// Глобальный индикатор загрузки для приложения (серверный компонент).
+
+export default function Loading() {
+    return (
+        <div className="loading-container">
+            <p>Loading ChitChat Dating...</p>
+        </div>
+    );
+}
+
+// app/layout.tsx
+import type { Metadata } from "next";
+import type { ReactNode } from 'react';
+
+import "@/styles/reset.css";
+import "./globals.css";
+
+export const metadata: Metadata = {
+  title: "ChitChat PWA",
+  description: "Scalable chat app on Next.js",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <div className="background_main">{children}</div>
+      </body>
+    </html>
+  );
+}
+
+
+/* app/page.module.css */
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    text-align: center;
+    background-color: #f5f5f5;
+    padding: 20px;
+}
+
+.title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.subtitle {
+    font-size: 1.2rem;
+    color: #666;
+    margin-bottom: 2rem;
+}
+
+.button {
+    display: inline-block;
+    padding: 12px 24px;
+    background-color: #0070f3;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    transition: background-color 0.3s;
+}
+
+.button:hover {
+    background-color: #005bb5;
+}
+
+
+// app/page.jsx
+// Главная страница, мгновенно редиректит авторизованных пользователей.
+
+"use client";
+
+export default function Page() {
+    return (
+        <div>
+            <p>ChitChat Dating</p>
+        </div>
+    );
+}
+
+
+
+// app/lib/store/deviceStore.ts
+
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+export type DeviceType = 'mobile' | 'tablet' | 'desktop' | 'unknown';
+
+export interface DeviceInfo {
+  userAgent: string;
+  ipAddress: string | null;
+  browserLanguage: string;
+  deviceId: string;
+  deviceType: DeviceType;
+  timezone: string;
+  timezoneUTC: string;
+  timezoneOffset: number;
+  platform: string;
+  localTime: string;
+}
+
+interface DeviceState {
+  deviceInfo: DeviceInfo;
+  isDetected: boolean;
+  setIPAddress: (ip: string) => void;
+  detectDevice: () => Promise<void>;
+  generateDeviceId: () => string;
+  updateLocalTime: () => void;
+}
+
+const generateDeviceId = (): string => {
+  if (typeof window === 'undefined') return 'server-side';
+  
+  const signals = [
+    navigator.userAgent,
+    navigator.language,
+    screen.width,
+    screen.height,
+    screen.colorDepth,
+    new Date().getTimezoneOffset(),
+    navigator.platform
+  ].join('|');
+
+  let hash = 0;
+  for (let i = 0; i < signals.length; i++) {
+    const char = signals.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  
+  return Math.abs(hash).toString(36);
+};
+
+const getCurrentLocalTime = (): string => {
+  const now = new Date();
+  return now.toLocaleTimeString('ru-RU', { 
+    hour: '2-digit', 
+    minute: '2-digit'
+    // Убираем seconds для чистоты
+  });
+};
+
+const getTimezoneUTC = (offset: number): string => {
+  const sign = offset <= 0 ? '+' : '-';
+  const absOffset = Math.abs(offset);
+  const hours = Math.floor(absOffset / 60);
+  return `UTC${sign}${hours}`;
+};
+
+const detectDeviceType = (userAgent: string): DeviceType => {
+  const ua = userAgent.toLowerCase();
+  
+  if (/mobile|iphone|ipod|android|blackberry|opera mini|opera mobi/i.test(ua)) {
+    return 'mobile';
+  }
+  if (/tablet|ipad|android(?!.*mobile)|kindle|silk/i.test(ua)) {
+    return 'tablet';
+  }
+  return 'desktop';
+};
+
+// 🔧 ИСПРАВЛЕНО: Упрощенное получение платформы
+const getPlatform = (userAgent: string): string => {
+  const ua = userAgent.toLowerCase();
+  
+  if (ua.includes('android')) return 'Android';
+  if (ua.includes('iphone') || ua.includes('ipad')) return 'iOS';
+  if (ua.includes('windows')) return 'Windows';
+  if (ua.includes('mac')) return 'macOS';
+  if (ua.includes('linux')) return 'Linux';
+  
+  return 'unknown';
+};
+
+export const useDeviceStore = create<DeviceState>()(
+  persist(
+    (set, get) => ({
+      deviceInfo: {
+        userAgent: '',
+        ipAddress: null,
+        browserLanguage: 'en',
+        deviceId: '',
+        deviceType: 'unknown',
+        timezone: 'UTC',
+        timezoneUTC: 'UTC+0',
+        timezoneOffset: 0,
+        platform: 'unknown',
+        localTime: '00:00'
+      },
+      isDetected: false,
+
+      generateDeviceId,
+
+      detectDevice: async () => {
+        if (typeof window === 'undefined') return;
+
+        const userAgent = navigator.userAgent;
+        const deviceType = detectDeviceType(userAgent);
+        const deviceId = get().generateDeviceId();
+        const platform = getPlatform(userAgent); // 🔧 ИСПРАВЛЕНО
+        const timezoneOffset = new Date().getTimezoneOffset();
+        const timezoneUTC = getTimezoneUTC(timezoneOffset);
+
+        set({
+          deviceInfo: {
+            userAgent,
+            ipAddress: null,
+            browserLanguage: navigator.language || 'en',
+            deviceId,
+            deviceType,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            timezoneUTC,
+            timezoneOffset,
+            platform,
+            localTime: getCurrentLocalTime()
+          },
+          isDetected: true
+        });
+
+        // Запрашиваем IP
+        try {
+          const response = await fetch('/api/device/ip');
+          const data = await response.json();
+          if (data.ip) {
+            get().setIPAddress(data.ip);
+          }
+        } catch (error) {
+          console.warn('Failed to fetch IP address');
+        }
+      },
+
+      setIPAddress: (ip) => set((state) => ({
+        deviceInfo: { 
+          ...state.deviceInfo, 
+          ipAddress: ip 
+        }
+      })),
+
+      updateLocalTime: () => set((state) => ({
+        deviceInfo: {
+          ...state.deviceInfo,
+          localTime: getCurrentLocalTime()
+        }
+      }))
+    }),
+    {
+      name: 'device-storage',
+      partialize: (state) => ({
+        deviceInfo: {
+          userAgent: state.deviceInfo.userAgent,
+          browserLanguage: state.deviceInfo.browserLanguage,
+          deviceId: state.deviceInfo.deviceId,
+          deviceType: state.deviceInfo.deviceType,
+          timezone: state.deviceInfo.timezone,
+          timezoneUTC: state.deviceInfo.timezoneUTC,
+          timezoneOffset: state.deviceInfo.timezoneOffset,
+          platform: state.deviceInfo.platform
+        },
+        isDetected: state.isDetected
+      })
+    }
+  )
+);
+
+
+// app/api/device/ip/route.ts
+
+import { NextResponse } from 'next/server';
+
+// Простое кэширование
+let cachedIP: string | null = null;
+let lastFetched = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 минут
+
+export async function GET() {
+  const now = Date.now();
+  
+  // Возвращаем кэшированный IP если он еще актуален
+  if (cachedIP && now - lastFetched < CACHE_DURATION) {
+    return NextResponse.json({ ip: cachedIP });
+  }
+
+  try {
+    // Запрос к вашему Go-серверу
+    const goResponse = await fetch('http://localhost:8080/user/ipaddress', {
+      signal: AbortSignal.timeout(5000)
+    });
+
+    if (!goResponse.ok) {
+      throw new Error(`Go server responded with ${goResponse.status}`);
+    }
+
+    const data = await goResponse.json();
+    const ip = data.ip;
+    
+    // Простая валидация IP
+    if (ip && typeof ip === 'string') {
+      cachedIP = ip;
+      lastFetched = now;
+      return NextResponse.json({ ip });
+    } else {
+      throw new Error('Invalid IP address received');
+    }
+  } catch (error) {
+    console.error('Failed to fetch IP from Go server:', error);
+    
+    // Возвращаем кэшированный IP как fallback
+    if (cachedIP) {
+      return NextResponse.json({ ip: cachedIP });
+    }
+    
+    return NextResponse.json({ ip: null });
+  }
+}
+
+
+мы сейчас на странице auth/open 
+давай оформим ее, как я раньше делал, 
+пришлю как она выглядела
+
+
+
+.auth {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+}
+
+.authform {
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    width: 90vw;
+    text-align: center;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.logo {
+    width: 50%;
+    height: 50%;
+    margin-bottom: 1em;
+}
+
+.welcome {
+    margin-bottom: 1em;
+    font-size: 2em;
+    color: brown;
+    font-family: cursive;
+}
+
+/* Блок children */
+.authblock {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    align-items: center;
+    width: 100%;
+
+}
+
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    background-color: #f5f5f5;
+  }
+  
+  .form {
+    width: 100%;
+    max-width: 400px;
+    padding: 30px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .inputWrapper {
+    margin-bottom: 20px;
+  }
+  
+  .input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border-color 0.2s;
+  }
+  
+  .input:focus {
+    border-color: #0070f3;
+    outline: none;
+  }
+  
+  .input:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+  }
+  
+  .error {
+    color: #dc3545;
+    font-size: 14px;
+    margin-top: 8px;
+  }
+  
+  .button {
+    width: 100%;
+    padding: 12px;
+    background-color: #0070f3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .button:hover:not(:disabled) {
+    background-color: #0051cc;
+  }
+  
+  .button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  
+  @media (max-width: 480px) {
+    .form {
+      padding: 20px;
+    }
+  }
+
+
+/* Security Policy and Terms of Use */
+.policy {
+    margin-top: 5em;
+    font-size: 0.8em;
+    color: gray;
+}
+
+import styles from "./authLayout.module.css";
+import Image from "next/image";
+import SecurityPolicy from "./securitypolicy/SecurityPolicy";
+
+export default function AuthLayout({ children }) {
+  return (
+    <div className={styles.auth}>
+      <div className={styles.authform}>
+        <Image
+          src="/logo.png"
+          alt="Логотип"
+          width={60}
+          height={60}
+          className={styles.logo}
+        />
+        <h2 className={styles.welcome}>ChitChat</h2>
+        <div className={styles.authblock}>
+            {children}
+        </div>
+        <SecurityPolicy />
+      </div>
+    </div>
+  );
+}
+
+// app/(auth)/auth/api/route.ts
+import { NextResponse } from 'next/server';
+
+export async function POST(request: Request) {
+  const { identifier, type } = await request.json();
+
+  if (!identifier || !type) {
+    return NextResponse.json({ error: 'Отсутствуют обязательные поля' }, { status: 400 });
+  }
+
+  const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+  const isPhone = /^\+?[\d\s-]{6,15}$/.test(identifier);
+
+  if ((type === 'email' && !isEmail) || (type === 'number' && !isPhone)) {
+    return NextResponse.json({ error: 'Неверный формат идентификатора' }, { status: 400 });
+  }
+
+  const status = type === 'email' ? 'exists' : 'new';
+
+  return NextResponse.json({ status, type });
+}
+
+"use client";
+import { useState } from "react";
+
+import styles from "./auth.module.css";
+
+export default function AuthInput() {
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState(null); // Храним ошибку (или null)
+  const [isValid, setIsValid] = useState(false); // Статус валидации
+
+  const validateEmail = (value) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(value);
+  };
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setEmail(value);
+
+    if (value === "") {
+      setError(null);
+      setIsValid(false);
+    } else if (!validateEmail(value)) {
+      setError("Некорректный email");
+      setIsValid(false);
+    } else {
+      setError(null);
+      setIsValid(true);
+    }
+  };
+
+  const handleSubmit = (e) => {
+    if (!isValid) {
+      e.preventDefault(); // Отмена отправки формы
+      setError("Введите корректный email");
+    }
+  };
+
+  return (
+<>
+        <input
+          type="email"
+          name="email"
+          placeholder="Введите почту"
+          value={email}
+          onChange={handleChange}
+          required
+          className={`${styles.input} ${error ? styles.invalid : isValid ? styles.valid : ""}`}
+        />
+        {error && <p className={styles.error}>{error}</p>}
+        <button type="submit" onClick={handleSubmit}>Отправить</button>
+</>
+  );
+}
+
+.sendaccess {
+    width: 100%;
+  }
+  
+  .formaccess {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+  
+  .input {
+    padding: 0.7em;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    outline: none;
+    width: 100%;
+    font-size: 1em;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .input:focus {
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  }
+  
+  .invalid {
+    border-color: #ff4136;
+  }
+  
+  .valid {
+    border-color: #2ecc40;
+  }
+  
+  .error {
+    color: #ff4136;
+    font-size: 0.9em;
+    margin-top: 5px;
+    text-align: left;
+  }
+  
+  .button {
+    padding: 0.7em;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    margin-top: 1em;
+  }
+  
+  .button:hover {
+    background-color: #0056b3;
+  }
+  
+  .button:active {
+    transform: scale(0.98);
+  }
+  
+  .button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+  
+  @media (max-width: 480px) {
+    .formaccess {
+      max-width: 100%;
+    }
+  }
+
+
+
+
+export const metadata = {
+  title: "Авторизация",
+  description: "Авторизация",
+};
+
+export default function AuthLayout({ children }) {
+  return <>{children}</>;
+}
+
+import React from "react";
+
+export default function Loading() {
+    // Or a custom loading skeleton component
+    return <p>Loading... Почта или номер</p>
+  }
+
+// app/(auth)/auth/page.jsx
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../../../lib/auth/AuthContext";
+import SendAccess from "./SendAccess";
+
+export default function Auth() {
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/user");
+    }
+  }, [isAuthenticated, router]);
+
+  return <SendAccess />;
+}
+
+// app/(auth)/auth/SendAccess.tsx
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import styles from "./auth.module.css";
+
+export default function SendAccess() {
+    const [identifier, setIdentifier] = useState("");
+    const router = useRouter();
+
+    const validateIdentifier = (value: string) => {
+        const trimmedValue = value.trim();
+        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedValue);
+        const isPhone = /^\+?[\d\s-]{6,15}$/.test(trimmedValue);
+
+        if (!trimmedValue) {
+            return { isValid: false, error: "Поле не может быть пустым" };
+        }
+        if (!isEmail && !isPhone) {
+            return { isValid: false, error: "Введите корректный email или номер телефона" };
+        }
+        return { isValid: true, type: isEmail ? "email" : "number", value: trimmedValue };
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const validation = validateIdentifier(identifier);
+
+        if (!validation.isValid) {
+            console.error(validation.error);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/open`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    identifier: validation.value,
+                    type: validation.type,
+                }),
+            });
+
+            const data = await response.json();
+            console.log("Ответ от /api/open:", data);
+
+            if (response.ok && data.uid) {
+                localStorage.setItem("auth_identifier", JSON.stringify({
+                    type: validation.type,
+                    value: validation.value,
+                    uid: data.uid,
+                    exists: data.exists,
+                }));
+                router.push(data.exists ? "/password/login" : "/password/register");
+            } else {
+                console.error(data.error || "Неизвестная ошибка сервера");
+            }
+        } catch (error) {
+            console.error("Ошибка сети:", (error as Error).message);
+        }
+    };
+
+    return (
+        <div className={styles.container}>
+            <form onSubmit={handleSubmit} className={styles.form}>
+                <div className={styles.inputWrapper}>
+                    <input
+                        type="text"
+                        value={identifier}
+                        onChange={(e) => setIdentifier(e.target.value)}
+                        placeholder="Email или телефон"
+                        className={styles.input}
+                    />
+                </div>
+                <button type="submit" className={styles.button}>Продолжить</button>
+            </form>
+        </div>
+    );
+}
+
+
+мне нужно стили оставить как были в старом варианте, 
+и внешний вид пусть остается старым вариантом
+
+
+что нужно сделать чтобы было удобно предложи?
+определить энпоинты какой отправить после ввода почты или номера телефона
+как я вижу отправляемый json содержит отправляемую почту или номер
+
+
+еще вопрос, при переходе на эту страницы нужно ли что спрашивать на бекенде? 
+у нас имеются в локалсторедж
+
+isAuthenticated = "not_authenticated"
+isIdentifier = not_defined
+isBlocked = not_defined
+isExists = not_defined
+isProtection = not_defined
+isSecret = not_defined
+isUserAgent = not_defined (хотя здесь уже должен быть юзер агент)
+
+
+что приходит с бекенда
+isExists прихоодит либо ложь либо правда,
+что это означает когда пришел с номером или почтой идет проверка в базе данных, 
+существует ли пользователь или нет, и от этого либо ложь либо правда, отправляется на фронтенд
+и отправляется его isIdentifier допустим равен 1000 пользователь. и проверяется заблокирован ли пользователь или нет, и соответвенно отправляется для isBlocked значения true / false
+то у нас после бекенда будут изменены в локал сторедж, поля
+
+isIdentifier 1000
+isBlocked будет значения true / false
+isExists будет значения true / false
+
+
+что делает фронтенд при получении json от бекенда
+проверяет первое
+isBlocked будет значения true / false
+если правда, то редирект на простую пока страниццу по адресу (auth)/auth/blocked
+
+если было значение false  то продалжаем дальше 
+у нас еще имеется уже 

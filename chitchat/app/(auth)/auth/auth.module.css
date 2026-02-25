@@ -1,0 +1,72 @@
+.sendaccess {
+    width: 100%;
+  }
+  
+  .formaccess {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+  
+  .input {
+    padding: 0.7em;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    outline: none;
+    width: 100%;
+    font-size: 1em;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .input:focus {
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  }
+  
+  .invalid {
+    border-color: #ff4136;
+  }
+  
+  .valid {
+    border-color: #2ecc40;
+  }
+  
+  .error {
+    color: #ff4136;
+    font-size: 0.9em;
+    margin-top: 5px;
+    text-align: left;
+  }
+  
+  .button {
+    padding: 0.7em;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    margin-top: 1em;
+  }
+  
+  .button:hover {
+    background-color: #0056b3;
+  }
+  
+  .button:active {
+    transform: scale(0.98);
+  }
+  
+  .button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+  
+  @media (max-width: 480px) {
+    .formaccess {
+      max-width: 100%;
+    }
+  }

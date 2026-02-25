@@ -1,0 +1,29 @@
+.spinner {
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+  color: brown;
+}
+
+.spinnerLarge {
+  width: 48px;
+  height: 48px;
+  animation: spin 1s linear infinite;
+  color: brown;
+}
+
+.spinnerContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

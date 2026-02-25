@@ -1,0 +1,81 @@
+go/
+├── cmd/
+│   └── main.go              # Точка входа
+│
+├── config/
+│   ├── config.go            # Загрузка .env, валидация
+│   └── database.go          # Подключение к БД
+│
+├── internal/
+│   ├── app/                 # Запуск сервера, graceful shutdown
+│   │   ├── app.go           # Основная логика (NewApp, Run, Shutdown)
+│   │   ├── shutdown.go      # для обработки graceful shutdown
+│   │   └── server/          # Конфигурация сервера
+│   │       ├── server.go    # Создание Gin
+│   │       └── router.go    # Настройка маршрутов
+│   │
+├── domain/                  # Модели (чистые структуры)
+│   ├── 
+│   └── 
+│
+├── transfer/                # Обработчики HTTP/WS
+│   ├── http/                # Обработчики HTTP
+│   │   ├── auth/
+│   │   │   ├── 
+│   │   │   └── 
+│   │   ├── 
+│   │   └── 
+│   └── ws/                  # WebSocket-обработчики
+│       ├── 
+│       └── 
+│
+├── service/                 # Бизнес-логика
+│   ├── 
+│   └── 
+│
+├── repository/              # Доступ к данным
+│   ├── 
+│   │   ├── 
+│   │   └── 
+│   └── 
+│
+├── middleware/              # Middleware
+│   ├── middleware.go        # Gin middleware 
+│   ├── cors/
+│   │   └── cors.go
+│   └── ratelimit/
+│       ├── ratelimit.go      # Основная логика
+│       ├── storage.go        # Шардированное хранилище  
+│       └── cleanup.go        # Автоочистка
+│
+├── pkg/                     # Вспомогательные пакеты
+│   ├── utils/
+│   │   └── 
+│   └── errors/
+│       └── 
+│
+├── migrations/              # SQL-миграции
+│   ├── 
+│   └── 
+│
+├── .env
+├── .env.release # должен быть в корне проекта, содержит production-настройки (TLS, реальные домены, безопасные секреты).
+├── go.mod
+└── go.sum
+
+
+
+
+/backend (Go)
+├── internal/
+│   ├── app/
+│   │   └── server/
+│   │       └── routes.go         # Маршруты API
+│   └── domain/
+│       └── user/
+│           └── model.go          # Модели данных
+
+
+
+
+

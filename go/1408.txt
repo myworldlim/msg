@@ -1,0 +1,564 @@
+chitchat/
+├── cmd/
+│   └── main.go              # Точка входа
+│
+├── config/
+│   ├── config.go            # Загрузка .env, валидация
+│   └── database.go          # Подключение к БД
+│
+├── internal/
+│   ├── app/                 # Запуск сервера, graceful shutdown
+│   │   ├── app.go           # Основная логика (NewApp, Run, Shutdown)
+│   │   ├── shutdown.go      # для обработки graceful shutdown
+│   │   └── server/          # Конфигурация сервера
+│   │       ├── server.go    # Создание Gin
+│   │       └── router.go    # Настройка маршрутов
+│   │
+├── domain/                  # Модели (чистые структуры)
+│   ├── 
+│   └── 
+│
+├── transfer/                # Обработчики HTTP/WS
+│   ├── http/                # Обработчики HTTP
+│   │   ├── auth/
+│   │   │   ├── 
+│   │   │   └── 
+│   │   ├── 
+│   │   └── 
+│   └── ws/                  # WebSocket-обработчики
+│       ├── 
+│       └── 
+│
+├── service/                 # Бизнес-логика
+│   ├── 
+│   └── 
+│
+├── repository/              # Доступ к данным
+│   ├── 
+│   │   ├── 
+│   │   └── 
+│   └── 
+│
+├── middleware/              # Middleware
+│   ├── cors/
+│   │   └── cors.go
+│   ├── auth/
+│   │   └── 
+│   └── 
+│
+├── pkg/                     # Вспомогательные пакеты
+│   ├── utils/
+│   │   └── 
+│   └── errors/
+│       └── 
+│
+├── migrations/              # SQL-миграции
+│   ├── 
+│   └── 
+│
+├── .env
+├── .env.release # должен быть в корне проекта, содержит production-настройки (TLS, реальные домены, безопасные секреты).
+├── go.mod
+└── go.sum
+
+
+
+
+module chitchat
+
+go 1.25.0
+
+require (
+	github.com/gin-gonic/gin v1.10.1
+	github.com/jackc/pgx/v5 v5.7.5
+	github.com/joho/godotenv v1.5.1
+)
+
+require (
+	github.com/bytedance/sonic v1.11.6 // indirect
+	github.com/bytedance/sonic/loader v0.1.1 // indirect
+	github.com/cloudwego/base64x v0.1.4 // indirect
+	github.com/cloudwego/iasm v0.2.0 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
+	github.com/gin-contrib/sse v0.1.0 // indirect
+	github.com/go-playground/locales v0.14.1 // indirect
+	github.com/go-playground/universal-translator v0.18.1 // indirect
+	github.com/go-playground/validator/v10 v10.20.0 // indirect
+	github.com/goccy/go-json v0.10.2 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/puddle/v2 v2.2.2 // indirect
+	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
+	github.com/kr/text v0.2.0 // indirect
+	github.com/leodido/go-urn v1.4.0 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
+	github.com/rogpeppe/go-internal v1.14.1 // indirect
+	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
+	github.com/ugorji/go/codec v1.2.12 // indirect
+	golang.org/x/arch v0.8.0 // indirect
+	golang.org/x/crypto v0.40.0 // indirect
+	golang.org/x/net v0.41.0 // indirect
+	golang.org/x/sync v0.16.0 // indirect
+	golang.org/x/sys v0.34.0 // indirect
+	golang.org/x/text v0.27.0 // indirect
+	google.golang.org/protobuf v1.34.1 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
+)
+
+
+# /.env
+# --- Основные настройки ---
+APP_ENV=release             # Окружение (local, production)
+APP_PORT=9000               # Порт HTTP-сервера
+WS_PORT=9000                # Порт WebSocket-сервера
+
+# --- Домены ---
+FRONTEND_ORIGIN=http://localhost:3000  # Домен фронтенда для CORS
+BACKEND_ORIGIN=http://localhost:9000   # Домен бэкенда (для документации)
+WS_ORIGIN=http://localhost:9000        # Домен WebSocket для проверки Origin
+
+# --- Настройки базы данных ---
+DB_USER=postgres
+DB_PASSWORD=toor
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=chitchat
+DB_SSLMODE=disable          # В production установите require
+DB_MAX_CONNS=50             # Максимальное количество соединений с базой данных
+DB_MIN_CONNS=5              # Минимальное количество соединений с базой данных
+
+# --- JWT токен ---
+JWT_SECRET=X7k9pLm2qA3sTd4fGhJk5lMn8oPrQw1xYzBcDeFgHiUv9jKlMnOpQrStUvWxYz12
+
+# --- Настройки MinIO (S3-хранилище файлов) ---
+# MINIO_ENDPOINT=localhost:9000
+# MINIO_ACCESS_KEY=minioadmin
+# MINIO_SECRET_KEY=minioadmin
+
+# --- Настройки почтового сервиса (если нужно) ---
+
+# --- Настройки (Web Push уведомления) ---
+
+
+# /.env.release
+# --- Основные настройки ---
+APP_ENV=release             # Окружение
+APP_PORT=9000               # Порт HTTP-сервера
+WS_PORT=9000                # Порт WebSocket-сервера
+
+# --- Домены ---
+FRONTEND_ORIGIN=http://localhost:3000  # Домен фронтенда для CORS
+BACKEND_ORIGIN=http://localhost:9000  # Домен бэкенда (API)
+WS_ORIGIN=http://localhost:9000       # Домен WebSocket
+
+# --- Настройки базы данных ---
+DB_USER=postgres           # Пользователь БД
+DB_PASSWORD=toor           # Пароль (используйте сложный пароль)
+DB_HOST=localhost          # Хост БД (например, RDS)
+DB_PORT=5432               # Порт БД
+DB_NAME=chitchat           # Имя БД
+DB_SSLMODE=require         # TLS для production
+DB_MAX_CONNS=50            # Максимальное количество соединений с базой данных
+DB_MIN_CONNS=5             # Минимальное количество соединений с базой данных
+# DB_SSLCERT=/path/to/cert.pem  # Путь к сертификату, если требуется
+# DB_SSLKEY=/path/to/key.pem    # Путь к ключу
+# DB_SSLROOTCERT=/path/to/ca.pem  # Путь к корневому сертификату
+
+# --- JWT токен ---
+JWT_SECRET=7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8  # Уникальный секрет (64+ символов)
+
+# --- Настройки MinIO (S3-хранилище файлов) ---
+# MINIO_ENDPOINT=minio.yourapp.com
+# MINIO_ACCESS_KEY=your_access_key
+# MINIO_SECRET_KEY=your_secret_key
+# MINIO_USE_SSL=true
+
+// cmd/main.go
+package main
+
+import (
+    "chitchat/config"
+    "chitchat/internal/app"
+    "log"
+)
+
+func main() {
+    // Инициализация конфигурации
+    config.InitConfig()
+
+    // Инициализация базы данных
+    dbPool := config.InitDB()
+
+    // Создание приложения
+    application := app.NewApp(dbPool)
+
+    // Запуск сервера и обработка graceful shutdown
+    if err := app.HandleShutdown(application); err != nil {
+        log.Fatalf("Ошибка при выполнении приложения: %v", err)
+    }
+}
+
+
+// internal/middleware/cors/cors.go
+package cors
+
+import (
+    "net/http"
+    "strings"
+    "github.com/gin-gonic/gin"
+    "chitchat/config"
+)
+
+func CORSMiddleware() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        origin := c.Request.Header.Get("Origin")
+        
+        // Проверяем, разрешен ли источник
+        allowed := isOriginAllowed(origin)
+        
+        if allowed {
+            c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+            c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+            c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+            c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+        }
+        
+        // Обработка preflight запросов
+        if c.Request.Method == "OPTIONS" {
+            c.AbortWithStatus(http.StatusNoContent)
+            return
+        }
+        
+        c.Next()
+    }
+}
+
+func isOriginAllowed(origin string) bool {
+    // Если нет настроек CORS, разрешаем все (для разработки)
+    if len(config.AppConfig.CORSAccepted) == 0 {
+        return true
+    }
+    
+    // Проверяем каждый разрешенный источник
+    for _, allowedOrigin := range config.AppConfig.CORSAccepted {
+        allowedOrigin = strings.TrimSpace(allowedOrigin)
+        if allowedOrigin == "*" || allowedOrigin == origin {
+            return true
+        }
+    }
+    
+    return false
+}
+
+// config/config.go
+// Загрузка и инициализация конфигурации из .env файла.
+// Предоставляет глобальную переменную Config.
+package config
+
+import (
+    "log"
+    "os"
+    "strconv"
+    "strings"
+    "github.com/joho/godotenv"
+    "github.com/gin-gonic/gin"
+)
+
+type Config struct {
+    AppEnv         string
+    AppPort        string
+    WSPort         string
+    FrontendOrigin string
+    BackendOrigin  string
+    WSOrigin       string
+    DBUser         string
+    DBPassword     string
+    DBHost         string
+    DBPort         string
+    DBName         string
+    DBSSLMode      string
+    CORSAccepted   []string
+    DBMaxConns     int
+    DBMinConns     int
+}
+
+var AppConfig Config
+
+func getEnv(key, fallback string) string {
+    if value := os.Getenv(key); value != "" {
+        return value
+    }
+    if fallback == "" {
+        log.Fatalf("Переменная окружения %s обязательна", key)
+    }
+    return fallback
+}
+
+func getEnvInt(key string, fallback int) int {
+    valueStr := getEnv(key, "")
+    if value, err := strconv.Atoi(valueStr); err == nil {
+        return value
+    }
+    return fallback
+}
+
+func InitConfig() {
+    // Загружаем .env
+    if err := godotenv.Load(); err != nil {
+        log.Println("Файл .env не найден, используем переменные окружения")
+    }
+
+    // Читаем AppEnv для выбора правильного .env файла
+    appEnv := getEnv("APP_ENV", "development")
+    
+    // Загружаем env-специфичный файл, игнорируем ошибку, если файл отсутствует
+    if err := godotenv.Load(".env." + appEnv); err != nil {
+        log.Printf("Файл .env.%s не найден, продолжаем", appEnv)
+    }
+
+    // Собираем конфигурацию
+    AppConfig = Config{
+        AppEnv:         getEnv("APP_ENV", "development"),
+        AppPort:        getEnv("APP_PORT", "9000"),
+        WSPort:         getEnv("WS_PORT", "9000"),
+        FrontendOrigin: getEnv("FRONTEND_ORIGIN", "http://localhost:3000"),
+        BackendOrigin:  getEnv("BACKEND_ORIGIN", "http://localhost:9000"),
+        WSOrigin:       getEnv("WS_ORIGIN", "http://localhost:9000"),
+        DBUser:         getEnv("DB_USER", "postgres"),
+        DBPassword:     getEnv("DB_PASSWORD", ""), // Обязательная переменная
+        DBHost:         getEnv("DB_HOST", "localhost"),
+        DBPort:         getEnv("DB_PORT", "5432"),
+        DBName:         getEnv("DB_NAME", "chitchat"),
+        DBSSLMode:      getEnv("DB_SSLMODE", "disable"),
+        CORSAccepted:   splitEnv("FRONTEND_ORIGIN", ","),
+        DBMaxConns:     getEnvInt("DB_MAX_CONNS", 50),
+        DBMinConns:     getEnvInt("DB_MIN_CONNS", 5),
+    }
+
+    // Валидация
+    if AppConfig.DBUser == "" || AppConfig.DBHost == "" ||
+        AppConfig.DBPort == "" || AppConfig.DBName == "" {
+        log.Fatal("Необходимо указать все параметры базы данных")
+    }
+
+    // Проверка портов
+    if _, err := strconv.Atoi(AppConfig.AppPort); err != nil {
+        log.Fatalf("APP_PORT должен быть числом: %v", err)
+    }
+    if _, err := strconv.Atoi(AppConfig.WSPort); err != nil {
+        log.Fatalf("WS_PORT должен быть числом: %v", err)
+    }
+
+    // Режим Gin
+    if AppConfig.AppEnv == "production" || AppConfig.AppEnv == "release" {
+        gin.SetMode(gin.ReleaseMode)
+        log.Println("Gin установлен в ReleaseMode")
+    } else {
+        gin.SetMode(gin.DebugMode)
+        log.Println("Gin установлен в DebugMode")
+    }
+}
+
+// Вспомогательная функция для разделения строк
+func splitEnv(key, sep string) []string {
+    value := getEnv(key, "")
+    if value == "" {
+        return []string{}
+    }
+    values := strings.Split(value, sep)
+    for i, v := range values {
+        values[i] = strings.TrimSpace(v)
+    }
+    return values
+}
+
+
+// config/database.go
+// Подключение к базе данных (PostgreSQL). Возвращает пул соединений.
+package config
+
+import (
+    "context"
+    "fmt"
+    "log"
+    "time"
+    "github.com/jackc/pgx/v5/pgxpool"
+)
+
+// InitDB инициализирует подключение к базе данных
+func InitDB() *pgxpool.Pool {
+    connStr := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=%s",
+        AppConfig.DBUser, AppConfig.DBPassword, AppConfig.DBHost, AppConfig.DBPort, AppConfig.DBName, AppConfig.DBSSLMode)
+
+    poolConfig, err := pgxpool.ParseConfig(connStr)
+    if err != nil {
+        log.Fatalf("Невозможно проанализировать конфигурацию базы данных: %v", err)
+    }
+
+    // Настройка пула соединений
+    poolConfig.MaxConns = int32(AppConfig.DBMaxConns) // Максимум соединений
+    poolConfig.MinConns = int32(AppConfig.DBMinConns) // Минимум соединений
+    poolConfig.MaxConnLifetime = 30 * time.Minute     // Время жизни соединения
+    poolConfig.MaxConnIdleTime = 5 * time.Minute      // Время простоя соединения
+    poolConfig.HealthCheckPeriod = 1 * time.Minute    // Период проверки здоровья
+
+    // Повторные попытки подключения
+    maxRetries := 5
+    retryDelay := 2 * time.Second
+    var dbPool *pgxpool.Pool
+
+    for attempt := 1; attempt <= maxRetries; attempt++ {
+        dbPool, err = pgxpool.NewWithConfig(context.Background(), poolConfig)
+        if err == nil {
+            ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+            err = dbPool.Ping(ctx)
+            cancel()
+            if err == nil {
+                log.Printf("Успешное подключение к базе данных %s", AppConfig.DBName)
+                return dbPool
+            }
+        }
+
+        log.Printf("Попытка %d: не удалось подключиться к базе данных: %v", attempt, err)
+        if attempt < maxRetries {
+            time.Sleep(retryDelay)
+            retryDelay *= 2 // Экспоненциальная задержка
+        }
+    }
+
+    log.Fatalf("Не удалось подключиться к базе данных после %d попыток", maxRetries)
+    return nil
+}
+
+
+// internal/app/server/routes.go
+package server
+
+import (
+    "net/http"
+    "github.com/gin-gonic/gin"
+    "github.com/jackc/pgx/v5/pgxpool"
+)
+
+// SetupRoutes настраивает маршруты HTTP-сервера
+func SetupRoutes(r *gin.Engine, db *pgxpool.Pool) {
+    // Тестовый маршрут для проверки сервера
+    r.GET("/", func(c *gin.Context) {
+        c.String(http.StatusOK, "Приложение работает!")
+    })
+}
+
+// internal/app/server/server.go
+package server
+
+import (
+    "chitchat/internal/middleware/cors"
+    "github.com/gin-gonic/gin"
+    "github.com/jackc/pgx/v5/pgxpool"
+)
+
+func NewServer(db *pgxpool.Pool) *gin.Engine {
+    r := gin.New()
+    // Глобальные middleware
+    r.Use(gin.Logger())           // Добавляем логирование запросов
+    r.Use(cors.CORSMiddleware())  // Добавляем CORS
+    // Настройка маршрутов
+    SetupRoutes(r, db)
+    return r
+}
+
+
+
+// internal/app/app.go
+// Основной файл приложения для инициализации и запуска сервера.
+package app
+
+import (
+    "chitchat/config"
+    "chitchat/internal/app/server"
+    "github.com/jackc/pgx/v5/pgxpool"
+    "log"
+    "net/http"
+)
+
+// App представляет приложение
+type App struct {
+    db     *pgxpool.Pool
+    server *http.Server
+}
+
+// NewApp создаёт новое приложение
+func NewApp(db *pgxpool.Pool) *App {
+    r := server.NewServer(db)
+    serverHttp := &http.Server{
+        Addr:    ":" + config.AppConfig.AppPort,
+        Handler: r,
+    }
+    return &App{
+        db:     db,
+        server: serverHttp,
+    }
+}
+
+// Run запускает сервер
+func (a *App) Run() error {
+    log.Printf("HTTP-сервер запущен на :%s", a.server.Addr)
+    if err := a.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+        log.Printf("Ошибка запуска сервера: %v", err)
+        return err
+    }
+    return nil
+}
+
+
+// internal/app/shutdown.go
+// Обработка graceful shutdown для приложения.
+package app
+
+import (
+    "context"
+    "log"
+    "os/signal"
+    "syscall"
+    "time"
+)
+
+// HandleShutdown запускает сервер и обрабатывает graceful shutdown
+func HandleShutdown(app *App) error {
+    // Запуск сервера в отдельной горутине
+    go func() {
+        if err := app.Run(); err != nil {
+            log.Fatalf("Ошибка запуска приложения: %v", err)
+        }
+    }()
+
+    // Обработка сигналов для graceful shutdown
+    ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+    defer stop()
+
+    <-ctx.Done()
+    shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+
+    log.Println("Останавливаем сервер...")
+    if err := app.server.Shutdown(shutdownCtx); err != nil {
+        log.Printf("Ошибка остановки сервера: %v", err)
+        return err
+    }
+
+    log.Println("Закрываем пул соединений...")
+    app.db.Close()
+    stats := app.db.Stat()
+    if stats.TotalConns() > 0 {
+        log.Printf("Внимание: %d соединений не были закрыты", stats.TotalConns())
+    }
+    log.Println("Пул соединений закрыт")
+    return nil
+}
+
+
+

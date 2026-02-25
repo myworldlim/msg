@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../next"
+		},
+		{
+			"path": "../yarn"
+		},
+		{
+			"path": "../next33"
+		}
+	],
+	"settings": {}
+}

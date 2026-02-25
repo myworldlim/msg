@@ -1,0 +1,122 @@
+.auth {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+}
+
+.authform {
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    width: 90vw;
+    max-width: 480px;
+    text-align: center;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.logo {
+    width: 50%;
+    height: 50%;
+    margin-bottom: 1em;
+}
+
+.welcome {
+    margin-bottom: 1em;
+    font-size: 2em;
+    color: brown;
+    font-family: cursive;
+}
+
+.authblock {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    align-items: center;
+    width: 100%;
+
+}
+
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    background-color: #f5f5f5;
+  }
+  
+  .form {
+    width: 100%;
+    max-width: 400px;
+    padding: 30px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .inputWrapper {
+    margin-bottom: 20px;
+  }
+  
+  .input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border-color 0.2s;
+  }
+  
+  .input:focus {
+    border-color: #0070f3;
+    outline: none;
+  }
+  
+  .input:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+  }
+  
+  .error {
+    color: #dc3545;
+    font-size: 14px;
+    margin-top: 8px;
+  }
+  
+  .button {
+    width: 100%;
+    padding: 12px;
+    background-color: #0070f3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .button:hover:not(:disabled) {
+    background-color: #0051cc;
+  }
+  
+  .button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  
+  @media (max-width: 480px) {
+    .form {
+      padding: 20px;
+    }
+  }
+
+
+/* Security Policy and Terms of Use */
+.policy {
+    margin-top: 5em;
+    font-size: 0.8em;
+    color: gray;
+}

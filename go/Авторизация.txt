@@ -1,0 +1,95 @@
+давай удалим вообще ratelimit и из всех остальных файлов что с ним связано, далее удалить все энпоинты которые приходят включая основной, но оставить комеентарии где будут публичне защищенные энпоинты чтобы оставить только чистый пока рабочий вариант проекта, без лишнего, в том числе и вебсокет соединение удалить. это все будет посттепеннно добавляться, 
+
+как я вижу авторизацию-регистрацию-аутентификацию пользователя
+
+
+
+когда пользователь первый раз зашел в приложение chitchat.dating/
+1. у него собираются данные в localstorage c ключем device-storage из файла // app/lib/store/deviceStore.ts
+    deviceInfo
+    browserLanguage: "ru-RU"
+    deviceId: "jvmbsl"
+    deviceType: "mobile"
+    platform: "Android"
+    timezone: "Europe/Moscow"
+    timezoneOffset: -180
+    timezoneUTC: "UTC+3"
+    userAgent: "Mozilla/5.0 (Linux; Android 8.0.0; SM-G955U Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36"
+    isDetected: true
+и IP адрес через "/api/device/primaryip"
+
+и проверяется по isAuthenticated: true / false / null (как лучше сделать на дополнительный энпоинт или оставить главный энпоинт (/))
+- если isAuthenticated: true - пользователь авторизован и попадает в папку (protected)
+- если isAuthenticated: false - пользователь еще не прошел проверку авторизации
+- если isAuthenticated: not_defined - значения по умолчанию
+
+2. формируются данные для авторизации и сохраняются в localstorage через фаил // app/lib/store/authStore.ts
+с ключем auth-storage 
+ с значениям по умолчанию
+    // UI состояния
+      isAuthenticated: 'not_defined'
+      isBlocked: 'not_defined'
+
+
+3. если пользователь зарегистрирован, то он автоматически переходит в папку (protected) то есть доступ авторизоованным
+isAuthenticated: true - пользователь авторизован и попадает в папку (protected)
+ │   ├── (protected)
+ │   │   ├── (Messenger) // Мессенджер
+ │   │   │   ├── components
+ │   │   │   ├── (chats)
+ │   │   │   │   └── page.jsx // этот точка входа по умолчанию авторизованного пользователя
+ │   │   │   ├── (groups)
+ │   │   │   │   └── page.jsx
+ │   │   │   ├── (contacts)
+ │   │   │   │   └── page.jsx
+ │   │   │   ├── (calls)
+ │   │   │   │   └── page.jsx
+ │   │   │   ├── layout.jsx (Главный лейаут папки (Messenger))
+ │   │   │   └── loading.jsx (Главный loading папки (Messenger))
+
+* мы сейчас не рассматриваем этот случай авторизованного, потому что нужно понять что иметь ввиду
+авторизованного пользователя, это какие должны быть данные в localstorage от zustand
+
+4. - если isAuthenticated: not_defined - значения по умолчанию если этого пораметра вообще не было в localstorage
+то это означает пользователя можно отправить на страницу (preview) 
+находится по адресу app/(preview)/layout.jsx
+
+5. - если isAuthenticated: false - пользователь еще не прошел проверку авторизации
+что это означает: пользователь уже был на сайте chitchat.dating но не прошел регистрацию, 
+авторизацию до конца, или по каким то причинам возможно другой сценарий
+
+очень подробно всю блок схему я рассказываю, строго по схеме
+
+5.1 
+по умолчанию isBlocked: 'not_defined' ставит zustand в состояние (первичное состояние)
+на энпоинт /auth/auth_blocked
+проверка авторизации и нужно проверить заблокирован ли польователь или нет
+по умолчанию у нас было isBlocked: 'not_defined'
+это означает что не нужно отправлять запрос в таблицу 
+"blocked"
+ blocked_id  первичный ключ
+ user_uid 62EgX8gtH5fqhBQyIWnL
+ is_blocked (true/false)
+ type  admin/moderator/users // или как лучше сделать кто его заблокировал
+ blocked_date (дата блокировки)
+
+5.2 
+
+
+вариант Зарегистрироваться
+
+
+
+
+
+      identifier: false, // Инициализация: первый визит — false
+      secret_value: 'not_defined', // Инициализация: 'not_defined' до проверки
+      protection: 'not_defined', // Инициализация: 'not_defined' до проверки
+      isLockedPass: false, // Инициализация: без блокировки
+
+    // Время жизни токенов
+      timeLockedPass: null, // Инициализация: null без времени
+      time_access_token: null, // Инициализация: null
+      time_refresh_token: null, // Инициализация: null
+      time_session_id: null, // Инициализация: null
+      time_device_id: null, // Инициализация: null

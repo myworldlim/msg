@@ -1,0 +1,1042 @@
+go/
+├── cmd/
+│   └── main.go              # Точка входа
+│
+├── config/
+│   ├── config.go            # Загрузка .env, валидация
+│   └── database.go          # Подключение к БД
+│
+├── internal/
+│   ├── app/                 # Запуск сервера, graceful shutdown
+│   │   ├── app.go           # Основная логика (NewApp, Run, Shutdown)
+│   │   ├── shutdown.go      # для обработки graceful shutdown
+│   │   └── server/          # Конфигурация сервера
+│   │       ├── server.go    # Создание Gin
+│   │       └── router.go    # Настройка маршрутов
+│   │
+├── domain/                  # Модели (чистые структуры)
+│   ├── 
+│   └── 
+│
+├── transfer/                # Обработчики HTTP/WS
+│   ├── http/                # Обработчики HTTP
+│   │   ├── auth/
+│   │   │   ├── 
+│   │   │   └── 
+│   │   ├── 
+│   │   └── 
+│   └── ws/                  # WebSocket-обработчики
+│       ├── 
+│       └── 
+│
+├── service/                 # Бизнес-логика
+│   ├── 
+│   └── 
+│
+├── repository/              # Доступ к данным
+│   ├── 
+│   │   ├── 
+│   │   └── 
+│   └── 
+│
+├── middleware/              # Middleware
+│   ├── middleware.go        # Gin middleware 
+│   ├── cors/
+│   │   └── cors.go
+│   └── ratelimit/
+│       ├── ratelimit.go      # Основная логика
+│       ├── storage.go        # Шардированное хранилище  
+│       └── cleanup.go        # Автоочистка
+│
+├── pkg/                     # Вспомогательные пакеты
+│   ├── utils/
+│   │   └── 
+│   └── errors/
+│       └── 
+│
+├── migrations/              # SQL-миграции
+│   ├── 
+│   └── 
+│
+├── .env
+├── .env.release # должен быть в корне проекта, содержит production-настройки (TLS, реальные домены, безопасные секреты).
+├── go.mod
+└── go.sum
+
+
+
+
+# /.env
+# --- Основные настройки ---
+APP_ENV=release             # Окружение (local, production)
+APP_PORT=8181               # Порт HTTP-сервера
+WS_PORT=8182                # Порт WebSocket-сервера
+
+# --- Домены ---
+FRONTEND_ORIGIN=http://localhost:3000  # Домен фронтенда для CORS
+BACKEND_ORIGIN=http://localhost:8181   # Домен бэкенда (для документации)
+WS_ORIGIN=http://localhost:8182        # Домен WebSocket для проверки Origin
+
+# --- API Настройки ---
+# API_PREFIX=/api/                    # ПРЕФИКС API
+
+# --- Настройки базы данных ---
+DB_USER=postgres
+DB_PASSWORD=toor
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=chitchat
+DB_SSLMODE=disable          # В production установите require
+DB_MAX_CONNS=50             # Максимальное количество соединений с базой данных
+DB_MIN_CONNS=5              # Минимальное количество соединений с базой данных
+
+# --- JWT токен ---
+# JWT_SECRET=X7k9pLm2qA3sTd4fGhJk5lMn8oPrQw1xYzBcDeFgHiUv9jKlMnOpQrStUvWxYz12
+
+# --- Настройки MinIO (S3-хранилище файлов) ---
+# MINIO_ENDPOINT=localhost:9000
+# MINIO_ACCESS_KEY=minioadmin
+# MINIO_SECRET_KEY=minioadmin
+
+# --- Настройки почтового сервиса (если нужно) ---
+
+# --- Настройки (Web Push уведомления) ---
+
+# /.env.release
+# --- Основные настройки ---
+APP_ENV=release             # Окружение
+APP_PORT=443                    # Порт HTTP-сервера HTTPS порт
+WS_PORT=443                     # Порт WebSocket-сервера (HTTPS) Тот же порт для WSS
+
+# --- Домены ---
+FRONTEND_ORIGIN=https://chitchat.com  # Продакшен домен фронтенда для CORS
+BACKEND_ORIGIN=https://api.chitchat.com  # Продакшен домен бэкенда (API)
+WS_ORIGIN=wss://api.chitchat.com       # Продакшен домен WebSocket
+
+# --- API Настройки ---
+# API_PREFIX=/                        # В продакшене API на корневом пути
+
+# --- Настройки базы данных ---
+DB_USER=postgres           # Пользователь БД
+DB_PASSWORD=toor  # Сложный пароль
+DB_HOST=localhost   # Хост БД (например, RDS)
+DB_PORT=5432               # Порт БД
+DB_NAME=chitchat           # Имя БД
+DB_SSLMODE=require         # TLS для production
+DB_MAX_CONNS=50            # Максимальное количество соединений с базой данных
+DB_MIN_CONNS=5             # Минимальное количество соединений с базой данных
+# DB_SSLCERT=/path/to/cert.pem  # Путь к сертификату, если требуется
+# DB_SSLKEY=/path/to/key.pem    # Путь к ключу
+# DB_SSLROOTCERT=/path/to/ca.pem  # Путь к корневому сертификату
+
+# --- JWT токен ---
+# JWT_SECRET=7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8  # Уникальный секрет (64+ символов)
+
+# --- Настройки MinIO (S3-хранилище файлов) ---
+# MINIO_ENDPOINT=minio.yourapp.com
+# MINIO_ACCESS_KEY=your_access_key
+# MINIO_SECRET_KEY=your_secret_key
+# MINIO_USE_SSL=true
+
+module chitchat
+
+go 1.25.0
+
+require (
+	github.com/gorilla/mux v1.8.1
+	github.com/gorilla/websocket v1.5.3
+	github.com/jackc/pgx/v5 v5.7.5
+	github.com/joho/godotenv v1.5.1
+)
+
+require (
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/puddle/v2 v2.2.2 // indirect
+	github.com/stretchr/testify v1.9.0 // indirect
+	golang.org/x/crypto v0.40.0 // indirect
+	golang.org/x/sync v0.16.0 // indirect
+	golang.org/x/text v0.27.0 // indirect
+)
+
+
+// cmd/main.go
+package main
+
+import (
+    "chitchat/config"
+    "chitchat/internal/app"
+    "log"
+)
+
+func main() {
+    // Инициализация конфигурации
+    config.InitConfig()
+
+    // Инициализация базы данных
+    dbPool := config.InitDB()
+
+    // Создание приложения
+    application := app.NewApp(dbPool)
+
+    // Запуск сервера и обработка graceful shutdown
+    if err := app.HandleShutdown(application); err != nil {
+        log.Fatalf("Ошибка при выполнении приложения: %v", err)
+    }
+}
+
+// config/config.go
+// Загрузка и инициализация конфигурации из .env файла.
+// Предоставляет глобальную переменную Config.
+package config
+
+import (
+	"log"
+	"os"
+	"strconv"
+	"strings"
+
+	"github.com/joho/godotenv"
+)
+
+type Config struct {
+	AppEnv         string
+	AppPort        string
+	WSPort         string
+	FrontendOrigin string
+	BackendOrigin  string
+	WSOrigin       string
+	DBUser         string
+	DBPassword     string
+	DBHost         string
+	DBPort         string
+	DBName         string
+	DBSSLMode      string
+	CORSAccepted   []string
+	DBMaxConns     int
+	DBMinConns     int
+	APIPrefix      string
+	JWTSecret      string
+}
+
+var AppConfig Config
+
+func getEnv(key, fallback string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	if fallback == "" {
+		log.Fatalf("Переменная окружения %s обязательна", key)
+	}
+	return fallback
+}
+
+func getEnvInt(key string, fallback int) int {
+	valueStr := os.Getenv(key)
+	if valueStr == "" {
+		return fallback
+	}
+	if value, err := strconv.Atoi(valueStr); err == nil {
+		return value
+	}
+	log.Printf("Предупреждение: некорректное значение для %s, используем значение по умолчанию %d", key, fallback)
+	return fallback
+}
+
+func InitConfig() {
+	appEnv := getEnv("APP_ENV", "development")
+
+	if err := godotenv.Load(".env." + appEnv); err != nil {
+		if err := godotenv.Load(); err != nil {
+			log.Println("Файл .env не найден, используем переменные окружения")
+		}
+	}
+
+	AppConfig = Config{
+		AppEnv:         getEnv("APP_ENV", "development"),
+		AppPort:        getEnv("APP_PORT", "8181"),
+		WSPort:         getEnv("WS_PORT", "8182"),
+		FrontendOrigin: getEnv("FRONTEND_ORIGIN", "http://localhost:3000"),
+		BackendOrigin:  getEnv("BACKEND_ORIGIN", "http://localhost:8181"),
+		WSOrigin:       getEnv("WS_ORIGIN", "http://localhost:8182"),
+		DBUser:         getEnv("DB_USER", "postgres"),
+		DBPassword:     getEnv("DB_PASSWORD", ""),
+		DBHost:         getEnv("DB_HOST", "localhost"),
+		DBPort:         getEnv("DB_PORT", "5432"),
+		DBName:         getEnv("DB_NAME", "chitchat"),
+		DBSSLMode:      getEnv("DB_SSLMODE", "disable"),
+		CORSAccepted:   splitEnv("FRONTEND_ORIGIN", ","),
+		DBMaxConns:     getEnvInt("DB_MAX_CONNS", 50),
+		DBMinConns:     getEnvInt("DB_MIN_CONNS", 5),
+		APIPrefix:      getEnv("API_PREFIX", "/api/"),
+		JWTSecret:      getEnv("JWT_SECRET", ""),
+	}
+
+	if AppConfig.DBPassword == "" {
+		log.Fatal("DB_PASSWORD обязателен")
+	}
+	if AppConfig.JWTSecret == "" {
+		log.Fatal("JWT_SECRET обязателен")
+	}
+	if AppConfig.DBUser == "" || AppConfig.DBHost == "" ||
+		AppConfig.DBPort == "" || AppConfig.DBName == "" {
+		log.Fatal("Необходимо указать все параметры базы данных")
+	}
+
+	if _, err := strconv.Atoi(AppConfig.AppPort); err != nil {
+		log.Fatalf("APP_PORT должен быть числом: %v", err)
+	}
+	if _, err := strconv.Atoi(AppConfig.WSPort); err != nil {
+		log.Fatalf("WS_PORT должен быть числом: %v", err)
+	}
+}
+
+func splitEnv(key, sep string) []string {
+	value := getEnv(key, "")
+	if value == "" {
+		return []string{}
+	}
+	values := strings.Split(value, sep)
+	for i, v := range values {
+		values[i] = strings.TrimSpace(v)
+	}
+	return values
+}
+
+// config/database.go
+// Подключение к базе данных (PostgreSQL). Возвращает пул соединений.
+package config
+
+import (
+    "context"
+    "fmt"
+    "log"
+    "time"
+    "github.com/jackc/pgx/v5/pgxpool"
+)
+
+// InitDB инициализирует подключение к базе данных
+func InitDB() *pgxpool.Pool {
+    connStr := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=%s",
+        AppConfig.DBUser, AppConfig.DBPassword, AppConfig.DBHost, AppConfig.DBPort, AppConfig.DBName, AppConfig.DBSSLMode)
+
+    poolConfig, err := pgxpool.ParseConfig(connStr)
+    if err != nil {
+        log.Fatalf("Невозможно проанализировать конфигурацию базы данных: %v", err)
+    }
+
+    // Настройка пула соединений
+    poolConfig.MaxConns = int32(AppConfig.DBMaxConns) // Максимум соединений
+    poolConfig.MinConns = int32(AppConfig.DBMinConns) // Минимум соединений
+    poolConfig.MaxConnLifetime = 30 * time.Minute     // Время жизни соединения
+    poolConfig.MaxConnIdleTime = 5 * time.Minute      // Время простоя соединения
+    poolConfig.HealthCheckPeriod = 1 * time.Minute    // Период проверки здоровья
+
+    // Повторные попытки подключения
+    maxRetries := 5
+    retryDelay := 2 * time.Second
+    var dbPool *pgxpool.Pool
+
+    for attempt := 1; attempt <= maxRetries; attempt++ {
+        dbPool, err = pgxpool.NewWithConfig(context.Background(), poolConfig)
+        if err == nil {
+            ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+            err = dbPool.Ping(ctx)
+            cancel()
+            if err == nil {
+                log.Printf("Успешное подключение к базе данных %s", AppConfig.DBName)
+                return dbPool
+            }
+        }
+
+        log.Printf("Попытка %d: не удалось подключиться к базе данных: %v", attempt, err)
+        if attempt < maxRetries {
+            time.Sleep(retryDelay)
+            retryDelay *= 2 // Экспоненциальная задержка
+        }
+    }
+
+    log.Fatalf("Не удалось подключиться к базе данных после %d попыток", maxRetries)
+    return nil
+}
+
+// internal/app/app.go
+// Основной файл приложения для инициализации и запуска сервера.
+package app
+
+import (
+    "chitchat/config"
+    "chitchat/internal/app/server"
+    "github.com/jackc/pgx/v5/pgxpool"
+    "log"
+    "net/http"
+)
+
+// App представляет приложение
+type App struct {
+    db     *pgxpool.Pool
+    server *http.Server
+}
+
+// NewApp создаёт новое приложение
+func NewApp(db *pgxpool.Pool) *App {
+    r := server.NewServer(db)
+    serverHttp := &http.Server{
+        Addr:    ":" + config.AppConfig.AppPort,
+        Handler: r,
+    }
+    return &App{
+        db:     db,
+        server: serverHttp,
+    }
+}
+
+// Run запускает сервер
+func (a *App) Run() error {
+    log.Printf("HTTP-сервер запущен на :%s", a.server.Addr)
+    if err := a.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+        log.Printf("Ошибка запуска сервера: %v", err)
+        return err
+    }
+    return nil
+}
+
+// internal/app/shutdown.go
+// Обработка graceful shutdown для приложения.
+package app
+
+import (
+    "context"
+    "log"
+    "os/signal"
+    "syscall"
+    "time"
+)
+
+// HandleShutdown запускает сервер и обрабатывает graceful shutdown
+func HandleShutdown(app *App) error {
+    // Запуск сервера в отдельной горутине
+    go func() {
+        if err := app.Run(); err != nil {
+            log.Fatalf("Ошибка запуска приложения: %v", err)
+        }
+    }()
+
+    // Обработка сигналов для graceful shutdown
+    ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+    defer stop()
+
+    <-ctx.Done()
+    shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+
+    log.Println("Останавливаем сервер...")
+    if err := app.server.Shutdown(shutdownCtx); err != nil {
+        log.Printf("Ошибка остановки сервера: %v", err)
+        return err
+    }
+
+    log.Println("Закрываем пул соединений...")
+    stats := app.db.Stat()
+    log.Printf("Активных соединений перед закрытием: %d", stats.TotalConns())
+    app.db.Close()
+    log.Println("Пул соединений закрыт")
+    return nil
+}
+
+// internal/app/server/routes.go
+/*
+   // Публичные маршруты (до аутентификации)
+   setupPublicRoutes(r, authHandler)
+
+   // Защищенные маршруты (после аутентификации)
+   setupProtectedRoutes(r, authHandler, tokenService, authSvc)
+
+   // WebSocket маршруты
+   setupWSRoutes(r, authSvc, wsRepoInstance)
+*/
+package server
+
+import (
+	"chitchat/config"
+	"chitchat/internal/transfer/http/device"
+	"encoding/json"
+	"log"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+func SetupRoutes(r *mux.Router, db *pgxpool.Pool) {
+    // Публичные маршруты
+    publicRouter := r.PathPrefix("/").Subrouter()
+    publicRouter.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        w.Write([]byte("Приложение работает!"))
+    }).Methods("GET")
+
+    // API публичные маршруты
+    apiPublicRouter := r.PathPrefix("/api").Subrouter()
+    device.RegisterRoutes(apiPublicRouter) // /api/device/ip
+    apiPublicRouter.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(map[string]interface{}{
+            "message":   "API работает!",
+            "timestamp": time.Now().Unix(),
+        })
+    }).Methods("GET")
+    apiPublicRouter.HandleFunc("/auth/login", func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(map[string]string{
+            "message": "Login endpoint",
+            "status":  "success",
+        })
+    }).Methods("POST")
+
+    // Защищённые маршруты
+    protectedRouter := r.PathPrefix("/api/protected").Subrouter()
+    protectedRouter.Use(AuthMiddleware)
+    protectedRouter.HandleFunc("/example", func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(map[string]string{
+            "message": "Protected endpoint",
+        })
+    }).Methods("GET")
+
+    // WebSocket маршрут
+    r.HandleFunc("/ws", handleWebSocket).Methods("GET")
+}
+
+// AuthMiddleware проверяет JWT-токен (заглушка)
+func AuthMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        token := r.Header.Get("Authorization")
+        if token == "" {
+            http.Error(w, `{"error": "Authorization header required"}`, http.StatusUnauthorized)
+            return
+        }
+        // Здесь должна быть проверка JWT (например, с github.com/golang-jwt/jwt)
+        // Для примера: если токен начинается с "Bearer ", считаем валидным
+        if !strings.HasPrefix(token, "Bearer ") {
+            http.Error(w, `{"error": "Invalid token format"}`, http.StatusUnauthorized)
+            return
+        }
+        next.ServeHTTP(w, r)
+    })
+}
+
+// WebSocket upgrader
+var upgrader = websocket.Upgrader{
+    ReadBufferSize:  1024,
+    WriteBufferSize: 1024,
+    CheckOrigin: func(r *http.Request) bool {
+        origin := r.Header.Get("Origin")
+        return origin == config.AppConfig.WSOrigin || origin == config.AppConfig.FrontendOrigin
+    },
+}
+
+// handleWebSocket обрабатывает WebSocket-соединения
+func handleWebSocket(w http.ResponseWriter, r *http.Request) {
+    conn, err := upgrader.Upgrade(w, r, nil)
+    if err != nil {
+        log.Printf("WebSocket upgrade failed: %v", err)
+        http.Error(w, "WebSocket upgrade failed", http.StatusBadRequest)
+        return
+    }
+    defer conn.Close()
+
+    // Базовый ping/pong для поддержания соединения
+    for {
+        messageType, message, err := conn.ReadMessage()
+        if err != nil {
+            log.Printf("WebSocket read error: %v", err)
+            break
+        }
+        if messageType == websocket.PingMessage {
+            conn.WriteMessage(websocket.PongMessage, []byte{})
+            continue
+        }
+        // Пример ответа на текстовое сообщение
+        if messageType == websocket.TextMessage {
+            conn.WriteMessage(websocket.TextMessage, []byte("Received: "+string(message)))
+        }
+    }
+}
+
+// internal/app/server/server.go
+package server
+
+import (
+    "chitchat/internal/middleware/cors"
+    "chitchat/internal/middleware/ratelimit"
+    "github.com/gorilla/mux"
+    "github.com/jackc/pgx/v5/pgxpool"
+    "log"
+    "net/http"
+)
+
+func NewServer(db *pgxpool.Pool) *mux.Router {
+    r := mux.NewRouter()
+
+    // Глобальные middleware - ПОРЯДОК ВАЖЕН!
+    r.Use(loggingMiddleware)               // 1. Логирование запросов
+    r.Use(recoveryMiddleware)             // 2. Восстановление после паники
+    r.Use(ratelimit.RateLimitMiddleware()) // 3. Rate limiting
+    r.Use(cors.CORSMiddleware())          // 4. CORS
+
+    // Настройка маршрутов
+    SetupRoutes(r, db)
+
+    return r
+}
+
+// loggingMiddleware логирует запросы
+func loggingMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        log.Printf("%s %s %s", r.Method, r.RequestURI, r.RemoteAddr)
+        next.ServeHTTP(w, r)
+    })
+}
+
+// recoveryMiddleware восстанавливает после паники
+func recoveryMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        defer func() {
+            if err := recover(); err != nil {
+                log.Printf("Panic: %v", err)
+                http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+            }
+        }()
+        next.ServeHTTP(w, r)
+    })
+}
+
+// internal/middleware/cors/cors.go
+package cors
+
+import (
+    "net/http"
+    "strings"
+    "chitchat/config"
+)
+
+// CORSMiddleware создает middleware для CORS
+func CORSMiddleware() func(http.Handler) http.Handler {
+    return func(next http.Handler) http.Handler {
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            origin := r.Header.Get("Origin")
+
+            // Проверяем, разрешен ли источник
+            allowed := isOriginAllowed(origin)
+
+            if allowed {
+                w.Header().Set("Access-Control-Allow-Origin", origin)
+                w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+                w.Header().Set("Access-Control-Allow-Credentials", "true")
+                w.Header().Set("Access-Control-Max-Age", "86400") // 24 часа
+            }
+
+            // Обработка preflight запросов
+            if r.Method == "OPTIONS" {
+                w.WriteHeader(http.StatusNoContent)
+                return
+            }
+
+            next.ServeHTTP(w, r)
+        })
+    }
+}
+
+func isOriginAllowed(origin string) bool {
+    // Если нет настроек CORS, разрешаем все (для разработки)
+    if len(config.AppConfig.CORSAccepted) == 0 {
+        return true
+    }
+
+    // Проверяем каждый разрешенный источник
+    for _, allowedOrigin := range config.AppConfig.CORSAccepted {
+        allowedOrigin = strings.TrimSpace(allowedOrigin)
+        if allowedOrigin == "*" || allowedOrigin == origin {
+            return true
+        }
+    }
+
+    return false
+}
+
+// internal/middleware/middleware.go
+package middleware
+
+import (
+    "chitchat/internal/middleware/cors"
+    "chitchat/internal/middleware/ratelimit"
+    "net/http"
+)
+
+// RateLimitMiddleware прокси-функция для rate limiting
+func RateLimitMiddleware() func(http.Handler) http.Handler {
+    return ratelimit.RateLimitMiddleware()
+}
+
+// CORSMiddleware прокси-функция для CORS
+func CORSMiddleware() func(http.Handler) http.Handler {
+    return cors.CORSMiddleware()
+}
+
+// internal/middleware/ratelimit/cleanup.go
+package ratelimit
+
+import (
+	"log"
+	"time"
+)
+
+// cleanupManager управляет автоочисткой
+type cleanupManager struct {
+	storage    *shardStorage
+	interval   time.Duration
+	stopChan   chan struct{}
+}
+
+// newCleanupManager создает менеджер очистки
+func newCleanupManager(storage *shardStorage, interval time.Duration) *cleanupManager {
+	return &cleanupManager{
+		storage:    storage,
+		interval:   interval,
+		stopChan:   make(chan struct{}),
+	}
+}
+
+// Start запускает фоновую очистку
+func (cm *cleanupManager) Start() {
+	ticker := time.NewTicker(cm.interval)
+	
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				cm.storage.Cleanup()
+				
+			case <-cm.stopChan:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
+	
+	log.Printf("Автоочистка rate limit запущена (интервал: %v)", cm.interval)
+}
+
+// Stop останавливает очистку
+func (cm *cleanupManager) Stop() {
+	close(cm.stopChan)
+	log.Println("Автоочистка rate limit остановлена")
+}
+
+// internal/middleware/ratelimit/middleware.go
+package ratelimit
+
+import (
+    "chitchat/config"
+    "encoding/json"
+    "net"
+    "net/http"
+    "strings"
+    "time"
+)
+
+func RateLimitMiddleware() func(http.Handler) http.Handler {
+    shardCount := 256
+    limiter := newIPUserAgentLimiter(shardCount)
+    cleanupManager := newCleanupManager(limiter.storage, 5*time.Minute)
+    cleanupManager.Start()
+
+    return func(next http.Handler) http.Handler {
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            path := r.URL.Path
+            // Rate limiting ТОЛЬКО для API (из конфига)
+            apiPrefix := config.AppConfig.APIPrefix
+            if !strings.HasPrefix(path, apiPrefix) {
+                next.ServeHTTP(w, r)
+                return
+            }
+
+            clientIP := getClientIP(r)
+            userAgent := r.UserAgent()
+            if !limiter.Allow(clientIP, userAgent, path, r.Method) {
+                w.Header().Set("Content-Type", "application/json")
+                w.WriteHeader(http.StatusTooManyRequests)
+                json.NewEncoder(w).Encode(map[string]string{
+                    "error": "Слишком частые запросы! Максимум 1 запрос в секунду",
+                    "code":  "RATE_LIMIT_EXCEEDED",
+                })
+                return
+            }
+
+            next.ServeHTTP(w, r)
+        })
+    }
+}
+
+// getClientIP извлекает реальный IP из заголовков или RemoteAddr
+func getClientIP(r *http.Request) string {
+    // X-Real-IP — часто используется Nginx
+    if ip := r.Header.Get("X-Real-IP"); ip != "" {
+        return ip
+    }
+    // X-Forwarded-For — список IP (клиент, прокси1, прокси2...)
+    if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+        ips := strings.Split(xff, ",")
+        if len(ips) > 0 {
+            return strings.TrimSpace(ips[0]) // первый — клиент
+        }
+    }
+    // Fallback: RemoteAddr
+    host, _, err := net.SplitHostPort(r.RemoteAddr)
+    if err != nil {
+        return r.RemoteAddr
+    }
+    return host
+}
+
+// internal/middleware/ratelimit/ratelimit.go
+package ratelimit
+
+import (
+    "fmt"
+    "strings"
+    "time"
+)
+
+// ipUserAgentLimiter с шардированием
+type ipUserAgentLimiter struct {
+    storage *shardStorage
+}
+
+// newIPUserAgentLimiter создает ограничитель
+func newIPUserAgentLimiter(shardCount int) *ipUserAgentLimiter {
+    storage := newShardStorage(shardCount)
+    return &ipUserAgentLimiter{
+        storage: storage,
+    }
+}
+
+// generateKey создает ключ из IP, User Agent, path и method
+func (l *ipUserAgentLimiter) generateKey(ip, userAgent, path, method string) string {
+    simpleUA := l.simplifyUserAgent(userAgent)
+    return fmt.Sprintf("%s::%s::%s::%s", ip, simpleUA, path, method)
+}
+
+// simplifyUserAgent упрощает User Agent
+func (l *ipUserAgentLimiter) simplifyUserAgent(userAgent string) string {
+    ua := strings.ToLower(userAgent)
+    switch {
+    case strings.Contains(ua, "chrome") && !strings.Contains(ua, "edg"):
+        return "chrome"
+    case strings.Contains(ua, "firefox"):
+        return "firefox"
+    case strings.Contains(ua, "safari") && !strings.Contains(ua, "chrome"):
+        return "safari"
+    case strings.Contains(ua, "edge"):
+        return "edge"
+    case strings.Contains(ua, "opera"):
+        return "opera"
+    case strings.Contains(ua, "mobile"):
+        return "mobile"
+    case strings.Contains(ua, "bot") || strings.Contains(ua, "crawler"):
+        return "bot"
+    case strings.Contains(ua, "postman") || strings.Contains(ua, "curl"):
+        return "api_tool"
+    default:
+        return "other"
+    }
+}
+
+// Allow проверяет, можно ли разрешить запрос
+func (l *ipUserAgentLimiter) Allow(ip, userAgent, path, method string) bool {
+    key := l.generateKey(ip, userAgent, path, method)
+    now := time.Now()
+    lastRequest, exists := l.storage.Get(key)
+    if !exists {
+        l.storage.Set(key, now)
+        return true
+    }
+    if now.Sub(lastRequest) < time.Second {
+        return false
+    }
+    l.storage.Set(key, now)
+    return true
+}
+
+// internal/middleware/ratelimit/storage.go
+package ratelimit
+
+import (
+	"sync"
+	"time"
+)
+
+// shardStorage хранилище с шардированием
+type shardStorage struct {
+	shards     []*shard
+	shardCount int
+}
+
+type shard struct {
+	data map[string]time.Time
+	mu   sync.RWMutex
+}
+
+// newShardStorage создает шардированное хранилище
+func newShardStorage(shardCount int) *shardStorage {
+	// Убедимся что количество шардов - степень двойки
+	if shardCount&(shardCount-1) != 0 {
+		shardCount = 1 << (32 - leadingZeros(shardCount-1))
+	}
+	
+	shards := make([]*shard, shardCount)
+	for i := range shards {
+		shards[i] = &shard{
+			data: make(map[string]time.Time),
+		}
+	}
+	
+	return &shardStorage{
+		shards:     shards,
+		shardCount: shardCount,
+	}
+}
+
+// getShard определяет шард для ключа
+func (s *shardStorage) getShard(key string) *shard {
+	hash := fnvHash(key)
+	return s.shards[hash%uint32(s.shardCount)]
+}
+
+// fnvHash быстрая хэш-функция
+func fnvHash(key string) uint32 {
+	hash := uint32(2166136261)
+	for i := 0; i < len(key); i++ {
+		hash ^= uint32(key[i])
+		hash *= 16777619
+	}
+	return hash
+}
+
+// leadingZeros вспомогательная функция
+func leadingZeros(x int) int {
+	if x <= 0 {
+		return 32
+	}
+	return 32 - len(string(rune(x)))
+}
+
+// Get получает значение
+func (s *shardStorage) Get(key string) (time.Time, bool) {
+	shard := s.getShard(key)
+	shard.mu.RLock()
+	defer shard.mu.RUnlock()
+	
+	value, exists := shard.data[key]
+	return value, exists
+}
+
+// Set сохраняет значение
+func (s *shardStorage) Set(key string, value time.Time) {
+	shard := s.getShard(key)
+	shard.mu.Lock()
+	defer shard.mu.Unlock()
+	
+	shard.data[key] = value
+}
+
+// Cleanup очищает все шарды
+func (s *shardStorage) Cleanup() {
+	now := time.Now()
+	fiveMinutesAgo := now.Add(-5 * time.Minute)
+	
+	var wg sync.WaitGroup
+	for i := range s.shards {
+		wg.Add(1)
+		go func(index int) {
+			defer wg.Done()
+			s.shards[index].cleanup(fiveMinutesAgo)
+		}(i)
+	}
+	wg.Wait()
+}
+
+// cleanup очищает один шард
+func (s *shard) cleanup(cutoffTime time.Time) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	
+	for key, lastSeen := range s.data {
+		if lastSeen.Before(cutoffTime) {
+			delete(s.data, key)
+		}
+	}
+}
+
+// transfer/http/device/handler.go
+
+// Обработчик получения IP-адреса клиента
+package device
+
+import (
+    "encoding/json"
+    "net"
+    "net/http"
+    "strings"
+)
+
+// GetIPAddress возвращает IP-адрес клиента
+func GetIPAddress(w http.ResponseWriter, r *http.Request) {
+    ip := getClientIP(r)
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]string{
+        "ip": ip,
+    })
+}
+
+// getClientIP извлекает реальный IP из заголовков или RemoteAddr
+func getClientIP(r *http.Request) string {
+    // X-Real-IP — часто используется Nginx
+    if ip := r.Header.Get("X-Real-IP"); ip != "" {
+        return ip
+    }
+    // X-Forwarded-For — список IP (клиент, прокси1, прокси2...)
+    if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+        ips := strings.Split(xff, ",")
+        if len(ips) > 0 {
+            return strings.TrimSpace(ips[0]) // первый — клиент
+        }
+    }
+    // Fallback: RemoteAddr
+    host, _, err := net.SplitHostPort(r.RemoteAddr)
+    if err != nil {
+        return r.RemoteAddr
+    }
+    return host
+}
+
+// internal/transfer/http/device/router.go
+
+// Роутер для device-эндпоинтов
+package device
+
+import (
+    "github.com/gorilla/mux"
+)
+
+// RegisterRoutes регистрирует маршруты для device
+func RegisterRoutes(r *mux.Router) {
+    deviceGroup := r.PathPrefix("/device").Subrouter()
+    deviceGroup.HandleFunc("/ip", GetIPAddress).Methods("GET")
+}
+
+

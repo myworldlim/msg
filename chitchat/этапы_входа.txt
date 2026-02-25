@@ -1,0 +1,190 @@
+{
+  "name": "chitchat",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "dev:https": "concurrently \"next dev\" \"local-ssl-proxy --source 3001 --target 3000 --cert localhost.pem --key localhost-key.pem\"",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.90.2",
+    "@use-gesture/react": "^10.3.1",
+    "framer-motion": "^12.23.22",
+    "next": "15.5.4",
+    "next-pwa": "5.6.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "zustand": "5.0.8"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.28.4",
+    "@types/minimatch": "6.0.0",
+    "@types/node": "20",
+    "@types/react": "19",
+    "@types/react-dom": "19",
+    "concurrently": "^9.2.1",
+    "local-ssl-proxy": "^2.0.5",
+    "typescript": "^5"
+  }
+}
+
+// next.config.js
+const withPWA = require('next-pwa')({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disableDevLogs: true,
+  buildExcludes: [/middleware-manifest\.json$/],
+  mode: process.env.NODE_ENV === 'development' ? 'development' : 'production',
+  disable: process.env.NODE_ENV === 'development',
+});
+
+module.exports = withPWA({
+  reactStrictMode: true,
+  typescript: { ignoreBuildErrors: false },
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:8181/api/:path*',
+      },
+    ];
+  },
+});
+
+фаил .env находится в папке app 
+на данный момент он пустой его нужно согласовать с бекендом вот фаил бекенда
+# /.env на бекенде
+# --- Основные настройки ---
+APP_ENV=release             # Окружение (local, production)
+APP_PORT=8181               # Порт HTTP-сервера
+WS_PORT=8182                # Порт WebSocket-сервера
+
+# --- Домены ---
+FRONTEND_ORIGIN=http://localhost:3000  # Домен фронтенда для CORS
+BACKEND_ORIGIN=http://localhost:8181   # Домен бэкенда (для документации)
+WS_ORIGIN=http://localhost:8182        # Домен WebSocket для проверки Origin
+
+# --- API Настройки ---
+API_PREFIX=/api/                    # ПРЕФИКС API
+
+# --- Настройки базы данных ---
+DB_USER=postgres
+DB_PASSWORD=toor
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=chitchat
+DB_SSLMODE=disable          # В production установите require
+DB_MAX_CONNS=50             # Максимальное количество соединений с базой данных
+DB_MIN_CONNS=5              # Минимальное количество соединений с базой данных
+
+# --- JWT токен ---
+JWT_SECRET=X7k9pLm2qA3sTd4fGhJk5lMn8oPrQw1xYzBcDeFgHiUv9jKlMnOpQrStUvWxYz12
+
+# --- Настройки MinIO (S3-хранилище файлов) ---
+# MINIO_ENDPOINT=localhost:9000
+# MINIO_ACCESS_KEY=minioadmin
+# MINIO_SECRET_KEY=minioadmin
+
+# --- Настройки почтового сервиса (если нужно) ---
+
+# --- Настройки (Web Push уведомления) ---
+
+
+
+первый по порядку app/layout.tsx только структура
+// app/layout.tsx
+import type { Metadata } from "next";
+import type { ReactNode } from 'react';
+
+import "@/styles/reset.css";
+import "./globals.css";
+
+export const metadata: Metadata = {
+  title: "ChitChat PWA",
+  description: "Scalable chat app on Next.js",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <div className="background_main">
+            {children}
+        </div>
+      </body>
+    </html>
+  );
+}
+
+далее по порядку, разбираем фаил page.tsx 
+у нас имеются функции getDeviceStatus() и getAuthStatus() 
+папка lib находится на одном уровне что и папка app
+page.tsx → вызывает getAuthStatus() из lib/store/auth/authStore.ts
+page.tsx → вызывает getDeviceStatus() из lib/store/device/deviceStore.ts
+функции getDeviceStatus() определяется первая когда пользователь 
+заходит впервые в приложение и эти данные сохраняются с ключем deviceInfo
+при повторных заходах в приложение эти данные не обновляются
+    browserLanguage: "ru-RU" только языки
+    deviceId: "jvmbsl"
+    deviceType: "mobile" 
+    platform: "Android"
+    timezone: "Europe/Moscow"
+    timezoneOffset: -180
+    timezoneUTC: "UTC+3"
+    userAgent: "Mozilla ..."
+    ipAddress: "237.84.2.178"
+дополнительно получаем IP адрес через "/api/device/userip" и сохраняем в переменную ipAddress
+
+функция getAuthStatus() определяется вторая когда пользователь зашел 
+первый раз и эти данные сохраняются с ключем authInfo по умолчанию
+isAuthenticated = not_defined
+isIdentifier = not_defined
+isBlocked = not_defined
+isExists = not_defined
+isProtection = not_defined
+isSecret = not_defined
+isUserAgent = not_defined
+
+
+/auth
+├── open/                 → входная точка
+├── blocked/              → если isBlocked
+├── password/
+│   ├── login/            → isExists === true
+│   └── register/         → isExists === false
+└── secret/
+    ├── login/            → isProtection === true && isSecret === true
+    └── register/         → isProtection === true && isSecret === false
+
+    
+
+во первых если пользователь зашел первый раз у него будет isBlocked = not_defined 
+после процесса авторизации или регистрации у него уже будет проверен 
+и у него будет установлен и статус будет уже либо true либо false, 
+из этого следует такое условие:
+если блокирован isBlocked = true → показываем страницу блокировки 
+находится по пути app/(auth)/blocked/page.tsx
+
+
+что нужно иметь ввиду, у нас есть HttpOnly куки
+session_token (время жизни 60 минут) httponly
+session_refresh (время жизни 7 дней) httponly
+они будут после авторизации или регистрации
+то есть пользователь уже ранее авторизованный, имеет эти куки
+а если пользователь зашел первый раз, то у него нет этих куков
+
+вопрос как нам сделать логику про куки? 
+вот пользователь входит в приложение уже авторизованный,
+у него есть куки session_token и session_refresh, 
+то редирект в папку app/(protected)/...
+

@@ -1,0 +1,65 @@
+.spinner {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  height: 20px;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  background-color: brown;
+  border-radius: 50%;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.spinnerLarge {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  height: 30px;
+}
+
+.dotLarge {
+  width: 18px;
+  height: 18px;
+  background-color: brown;
+  border-radius: 50%;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.dotLarge:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.dotLarge:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.spinnerContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
